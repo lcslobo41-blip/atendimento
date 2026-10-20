@@ -37,6 +37,8 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding-inl
 .back{background:none;border:0;color:#fff;font:600 14px var(--body);cursor:pointer;padding:6px 0;opacity:.85}
 .back[hidden]{display:none}
 .stripe{height:10px;margin:12px -18px 0;background:repeating-linear-gradient(-45deg,var(--safety) 0 12px,var(--brand) 12px 24px)}
+.stripe.ok{background:repeating-linear-gradient(-45deg,#2E9E5B 0 12px,#BFE8CD 12px 24px)}   /* v30: SS aberta */
+.stripe.pend{background:repeating-linear-gradient(-45deg,#F2B705 0 12px,#FFE79A 12px 24px)}   /* v30: em confirmação */
 .progress{height:4px;background:var(--line)}
 .progress i{display:block;height:100%;width:0;background:var(--safety);transition:width .35s ease}
 
@@ -174,7 +176,7 @@ dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
       <div class="logo">FF <span>LOGÍSTICA</span></div>
       <button class="back" id="limpar" hidden onclick="limparTudo()" style="margin-left:auto;margin-right:12px">↺ Limpar</button>
     </div>
-    <div class="stripe"></div>
+    <div class="stripe" id="topStripe"></div>
   </header>
   <div class="progress"><i id="bar"></i></div>
   <div id="inapp" hidden style="background:#FFF4D6;color:#5A4300;padding:10px 14px;font-size:14px;line-height:1.35;border-bottom:1px solid #E7C66A">Você abriu pelo WhatsApp. Para enviar fotos e vídeo sem falhas, <a id="inappLink" href="#" style="color:#1B2A3A;font-weight:700">abra no Chrome</a>.</div>
@@ -276,7 +278,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v29', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v30', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -311,6 +313,8 @@ function render(id){
   document.getElementById('limpar').hidden = ['inicio','proc'].includes(id);   // v28: botão Limpar
   document.getElementById('humano').hidden = id === 'proc';   // v24
   app.innerHTML = '<section class="screen">' + TELAS[id]() + '</section>';
+  const ts = document.getElementById('topStripe');   // v30: fita do topo verde (tudo aberto) / amarela (em confirmação)
+  ts.className = 'stripe' + (id === 'fim' && RES.length ? (RES.every(ssOk) ? ' ok' : ' pend') : '');
   window.scrollTo({top:0});
   const f = app.querySelector('input:not([type=file]),textarea'); if (f && matchMedia('(pointer:fine)').matches) f.focus();
   if (AFTER[id]) AFTER[id]();
@@ -739,11 +743,11 @@ ${tagCar('translate(275,123)')}
     const quando = new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
     const cartoes = RES.map((r, i) => {
       const it = S.itens[i], ok = r.numero_ss && (r.salva || r.repetida);
-      return `<div class="ticket"><div class="stripe"></div><div class="in" style="display:grid;gap:8px">
+      return `<div class="ticket"><div class="stripe ${ok ? 'ok' : 'pend'}"></div><div class="in" style="display:grid;gap:8px">
         <div class="ssno"><small>${ROT[S.equips[i]]} · ${esc(identItem(it))}${r.repetida ? ' · já registrada' : ''}</small>
           <span class="ssn">${ok ? esc(r.numero_ss) : 'Em confirmação'}</span></div>
         ${ok ? `<div><button class="copy" data-n="${esc(r.numero_ss)}">Copiar número</button></div>` :
-               `<p class="thanks">Protocolo <strong style="font-family:var(--mono)">${esc(r.protocolo || '')}</strong>. Nossa equipe confirma o número da SS pelo WhatsApp informado.</p>`}
+               `<p class="thanks">Protocolo <strong style="font-family:var(--mono)">${esc(r.protocolo || '')}</strong>. Nossa equipe em breve confirmará o número da SS aberta através do WhatsApp do cadastro.</p>`}
         <dl><dt>Problema</dt><dd>${it.cat ? ROT[it.cat] + ' · ' : ''}equipamento parado: ${ROT[it.parado]}</dd><dt>Registrada em</dt><dd>${quando}</dd></dl>
       </div></div>`;
     }).join('');
@@ -827,6 +831,26 @@ function linkAcomp(){   // SS reais deste atendimento para a simulação: EMP_M1
     return [S.equips[i], tag, r.numero_ss].concat(it.parado === 'SIM' ? ['P'] : []).join('_');
   }).filter(Boolean).join('~');
 }   // v18: resposta à pergunta de acompanhamento (null = ainda não respondeu)
+function ssOk(r){ return !!(r.numero_ss && (r.salva || r.repetida)); }
+// v30: na tela final, continua conferindo as SS ainda em confirmação (a cada 5 s, até 15 min) e atualiza os cartões
+let _confTimer = null, _confIni = 0;
+function conferirDepois(){
+  if (_confTimer) return;
+  _confIni = _confIni || Date.now();
+  _confTimer = setTimeout(async () => {
+    _confTimer = null;
+    if (app.dataset.cur !== 'fim' || Date.now() - _confIni > 900000) return;
+    const pend = RES.filter(r => r.protocolo && !ssOk(r));
+    if (!pend.length) return;
+    let mudou = false;
+    try {
+      const j = await apiGet('status', {ids: pend.map(r => r.protocolo).join(',')});
+      pend.forEach(r => { const x = (j.resultados || {})[r.protocolo];
+        if (x && x.numero_ss) { Object.assign(r, {_ok: true, numero_ss: x.numero_ss, salva: !!x.salva, repetida: !!x.repetida}); mudou = true; } });
+    } catch (e) {}
+    if (mudou) { const y = window.scrollY; render('fim'); window.scrollTo({top: y}); } else conferirDepois();
+  }, 5000);
+}
 function acompanhar(quer){
   ACOMP = !!quer;
   apiPost('acompanhar', {dados: {quer: ACOMP, protocolos: RES.map(r => r.protocolo).filter(Boolean)}}).catch(() => {});
@@ -864,6 +888,7 @@ function tagSeguir(){ S.tagnf_ok = S.tag + '|' + S.serie; identLoc(); }   // v21
 async function dadosOk(btn){
   if (!validar(precisaEmpresa() ? ['empresa','cel'] : ['cel'])) return;
   ler(['email']);
+  S.empresa = nomeEmpresa(S.empresa);   // v30
   S.emp_check = '';
   if (!precisaEmpresa()) { go('revisao'); return; }
   if (S.emp_ok_nome === S.empresa) { go('revisao'); return; }
@@ -884,6 +909,16 @@ function confEmp(ok){
   go('parado');
 }
 function precisaEmpresa(){ const p = S.itens[0]; return !p || p.cli_conf !== 'SIM' || !S.empresa; }   // v19: decide pelo 1º equipamento
+// v30: empresa – 1ª letra maiúscula e demais minúsculas; siglas digitadas em MAIÚSCULAS com até 4 letras ficam como estão (FF, BBA, LTDA, S/A)
+function nomeEmpresa(t){
+  const MIN = ['da','de','do','das','dos','e'];
+  return String(t || '').trim().replace(/\s+/g, ' ').split(' ').map((p, i) => {
+    if (/^[A-ZÀ-Ý0-9&./-]{1,4}$/.test(p) && /[A-ZÀ-Ý]/.test(p)) return p;
+    if (/^[a-z]\/[a-z]$/i.test(p)) return p.toUpperCase();   // s/a -> S/A
+    const q = p.toLocaleLowerCase('pt-BR');
+    return (i > 0 && MIN.includes(q)) ? q : q.charAt(0).toLocaleUpperCase('pt-BR') + q.slice(1);
+  }).join(' ');
+}
 // v26: nome próprio – 1ª letra maiúscula e demais minúsculas (Luis Lobo, Maria da Silva)
 function nomeProprio(t){
   const MIN = ['da','de','do','das','dos','e','di','du'];
@@ -944,7 +979,7 @@ async function enviarItens(){
     RES.push({protocolo: r.protocolo || '', numero_ss: '', salva: false, repetida: false, erro: r.erro || ''});
   }
   // v25: o robô do PC abre as SS; espera o nº (até 3 min se o PC estiver ligado)
-  const ids = RES.map(r => r.protocolo).filter(Boolean), t0 = Date.now(), lim = online ? 180000 : 8000;
+  const ids = RES.map(r => r.protocolo).filter(Boolean), t0 = Date.now(), lim = online ? Math.min(60000 + 60000 * ids.length, 300000) : 8000;   // v30: ~1 min por equipamento (máx. 5 min)
   const st = document.getElementById('midst');
   if (!ids.length) { RES.forEach(r => r.erro = r.erro || 'sem conexão'); }
   while (ids.length && Date.now() - t0 < lim) {
@@ -968,7 +1003,7 @@ async function enviarItens(){
 
 const AFTER = {
   orc(){ mascaraCel(document.getElementById('cel'));
-    document.getElementById('enviarOrc').onclick = e => { if (validar(['empresa','cel','necessidade'])){ ler(['email']); e.target.disabled = true; e.target.textContent = 'Enviando…';
+    document.getElementById('enviarOrc').onclick = e => { if (validar(['empresa','cel','necessidade'])){ ler(['email']); S.empresa = nomeEmpresa(S.empresa); S.nome = nomeProprio(S.nome); e.target.disabled = true; e.target.textContent = 'Enviando…';
       apiPost('orcamento', {dados: {nome:S.nome, empresa:S.empresa, cel:S.cel, email:S.email, necessidade:S.necessidade}})
         .then(j => { if (!j.ok) throw new Error(j.erro); _prot = j.protocolo; go('fimorc'); })
         .catch(() => { e.target.disabled = false; e.target.textContent = 'Enviar pedido'; document.getElementById('err').textContent = 'Não conseguimos enviar agora. Verifique sua conexão e tente novamente.'; });
@@ -997,6 +1032,7 @@ const AFTER = {
   revisao(){ document.getElementById('enviarAt').onclick = e => { e.target.disabled = true; e.target.textContent = 'Enviando…'; go('proc'); }; },
   proc(){ enviarItens(); },
   fim(){
+    if (RES.some(r => r.protocolo && !ssOk(r))) conferirDepois();   // v30
     document.querySelectorAll('.copy[data-n]').forEach(b => b.onclick = () => {
       const n = b.dataset.n;
       try { navigator.clipboard.writeText(n).then(() => b.textContent = 'Copiado ✓', () => b.textContent = n); }
