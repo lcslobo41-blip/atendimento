@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Atendimento FF Logística</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: um "aparelho" de 420px centralizado; uma pergunta por tela, faixa de segurança no topo, ticket de SS no final */
+:root{
+  --bg:#E7EAEE; --surface:#FFFFFF; --field:#F3F5F7; --ink:#15202B; --muted:#5E6B78; --line:#D3D9DF;
+  --brand:#1B2A3A; --safety:#F2B705; --safety-ink:#1B2A3A; --ok:#2E7D4F; --focus:#2D6FB0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E151C; --surface:#17212B; --field:#1F2B37; --ink:#E8EDF2; --muted:#9AA8B5; --line:#2C3A47;
+  --brand:#0B1219; --safety:#F2B705; --safety-ink:#14202B; --ok:#4FB27A; --focus:#6FA8DC; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E151C; --surface:#17212B; --field:#1F2B37; --ink:#E8EDF2; --muted:#9AA8B5; --line:#2C3A47;
+  --brand:#0B1219; --safety:#F2B705; --safety-ink:#14202B; --ok:#4FB27A; --focus:#6FA8DC; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding-inline:16px;padding-block:20px 40px}
+.device{max-width:420px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;min-height:640px;display:flex;flex-direction:column}
+.proto{max-width:420px;margin:0 auto 10px;font-size:12px;color:var(--muted);text-align:center}
+
+/* topo */
+.top{background:var(--brand);color:#fff;padding:14px 18px 0}
+.top .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{font:800 22px/1 var(--display);letter-spacing:.02em}
+.logo span{color:var(--safety)}
+.back{background:none;border:0;color:#fff;font:600 14px var(--body);cursor:pointer;padding:6px 0;opacity:.85}
+.back[hidden]{display:none}
+.stripe{height:10px;margin:12px -18px 0;background:repeating-linear-gradient(-45deg,var(--safety) 0 12px,var(--brand) 12px 24px)}
+.progress{height:4px;background:var(--line)}
+.progress i{display:block;height:100%;width:0;background:var(--safety);transition:width .35s ease}
+
+/* telas */
+main{flex:1;padding:22px 20px 24px;display:flex;flex-direction:column}
+.screen{display:flex;flex-direction:column;gap:14px;flex:1;animation:in .3s ease}
+@keyframes in{from{opacity:.4;transform:translateX(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.screen{animation:none}.progress i{transition:none}}
+.step{font:600 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font:700 34px/1.05 var(--display);margin:0;text-wrap:balance}
+h2{font:700 27px/1.1 var(--display);margin:0;text-wrap:balance}
+p{margin:0}
+.lead{color:var(--muted);font-size:16px}
+
+/* opções */
+.opts{display:grid;gap:10px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--field);border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;color:var(--ink);font:600 17px var(--body);transition:border-color .15s, transform .1s}
+.opts.two .opt{flex-direction:column;align-items:flex-start;gap:8px}
+.opt:hover{border-color:var(--safety)}
+.opt:active{transform:scale(.98)}
+.opt small{display:block;font:400 14px/1.35 var(--body);color:var(--muted);margin-top:2px}
+.opt svg{flex:none;width:40px;height:40px}
+.opt .ico{stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.opt .ico .fill{fill:var(--safety);stroke:none}
+.opt.sel{border-color:var(--safety);background:color-mix(in srgb,var(--safety) 14%,var(--field))}
+
+/* campos */
+label{display:block;font-weight:600;font-size:14px;margin-bottom:4px}
+.req{color:#C8372D}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:10px;padding:12px}
+textarea{min-height:120px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+.fields{display:grid;gap:12px}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+.err{font-size:13px;color:#C8372D;min-height:1em}
+
+/* placa TAG */
+.tagplate{display:flex;align-items:center;gap:12px;background:var(--field);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.plate{flex:none;font:500 15px var(--mono);background:#fff;color:#15202B;border:2px solid #15202B;border-radius:4px;padding:3px 8px;letter-spacing:.06em}
+
+/* fotos */
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed var(--line);border-radius:12px;padding:16px;text-align:center;cursor:pointer;color:var(--muted);font-size:14px}
+.drop strong{color:var(--ink)}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mb{display:flex;align-items:center;gap:8px;margin:0;background:var(--field);border:2px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font:600 15px var(--body);color:var(--ink)}
+.mb:active{border-color:var(--safety)}
+.thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.thumbs img,.thumbs video{aspect-ratio:1;object-fit:cover;border-radius:8px;width:100%;background:var(--brand)}
+.mth{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--brand)}
+.mth img,.mth video{width:100%;height:100%;object-fit:cover;display:block}
+.mth .ph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:28px}
+.mth .tg{position:absolute;left:4px;top:4px;font:600 11px var(--body);background:var(--brand);color:#fff;border-radius:4px;padding:1px 5px}
+.mth .tg:empty{display:none}
+.mth .st{position:absolute;left:0;right:0;bottom:0;font:600 11px var(--body);text-align:center;padding:3px 2px;background:rgba(21,32,43,.78);color:#fff}
+.mth.ok .st{background:#1E7D45}
+.mth.erro{cursor:pointer;outline:2px solid #C0392B}
+.mth.erro .st{background:#C0392B}
+.mth .rm{position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font:700 14px/22px var(--body);cursor:pointer;padding:0}
+
+/* botões */
+.cta{margin-top:auto;display:grid;gap:10px;padding-top:10px}
+.btn{width:100%;font:700 19px var(--display);letter-spacing:.04em;text-transform:uppercase;border:0;border-radius:10px;padding:15px;cursor:pointer;background:var(--safety);color:var(--safety-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);font-size:16px}
+.btn:disabled{opacity:.55;cursor:default}
+
+/* revisão */
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:15px}
+dt{color:var(--muted)}
+dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.box{background:var(--field);border-radius:12px;padding:14px}
+
+/* processando */
+.proc{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;flex:1;justify-content:center}
+/* animação: bateria carregando (vista lateral) */
+.charge{width:100%;max-width:340px;height:auto;display:block}
+.charge .wl{fill:#F6F7F9}.charge .wb{fill:#0C427E}.charge .fl{fill:#E4E8EC}
+.charge .qd{fill:none;stroke:#D9DEE3;stroke-width:1}
+.charge .sh{fill:#15202B;opacity:.08}
+.charge .stc{font:800 1px "Barlow Condensed","Arial Narrow",Arial,sans-serif;fill:#1D232A;letter-spacing:.05em}
+.charge .cab{stroke:#1B1F24;stroke-width:3.2;fill:none;stroke-linecap:round}
+.charge .flow{stroke:#F2B705;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-dasharray:3 7;animation:flow .8s linear infinite}
+.charge .bolt{fill:#F2B705;animation:led 1.4s ease-in-out infinite}
+.charge .cell{opacity:.12;fill:#D64545;animation:cor 5s linear infinite}
+.charge .k1{animation-name:cor,s1}.charge .k2{animation-name:cor,s2}.charge .k3{animation-name:cor,s3}.charge .k4{animation-name:cor,s4}.charge .k5{animation-name:cor,s5}
+@keyframes cor{0%,18%{fill:#E04848}38%,58%{fill:#F2B705}76%,100%{fill:#3FB26A}}
+@keyframes s1{0%,2%{opacity:.12}5%,94%{opacity:1}100%{opacity:.12}}
+@keyframes s2{0%,19%{opacity:.12}22%,94%{opacity:1}100%{opacity:.12}}
+@keyframes s3{0%,37%{opacity:.12}40%,94%{opacity:1}100%{opacity:.12}}
+@keyframes s4{0%,55%{opacity:.12}58%,94%{opacity:1}100%{opacity:.12}}
+@keyframes s5{0%,73%{opacity:.12}76%,94%{opacity:1}100%{opacity:.12}}
+@keyframes flow{to{stroke-dashoffset:-20}}
+@keyframes led{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.charge .flow,.charge .bolt{animation-duration:4s}.charge .cell{animation-duration:10s}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.checks{list-style:none;padding:0;margin:0;display:grid;gap:8px;text-align:left;font-size:15px}
+.checks li{color:var(--muted);display:flex;gap:8px;align-items:center}
+.checks li.done{color:var(--ink)}
+.checks li::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex:none}
+.checks li.done::before{background:var(--ok);border-color:var(--ok)}
+.checks li.ativo:not(.done){color:var(--ink);font-weight:600}
+.checks li.ativo:not(.done)::before{border-color:var(--safety);border-top-color:transparent;animation:spin 1s linear infinite}
+
+/* ticket */
+.ticket{border:2px solid var(--ink);border-radius:12px;overflow:hidden}
+.ticket .stripe{margin:0}
+.ticket .in{padding:16px}
+.ssno{font:800 40px/1 var(--display);letter-spacing:.02em}
+.ssno small{display:block;font:600 12px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.copy{background:none;border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;font:600 13px var(--body);color:var(--ink);cursor:pointer}
+.thanks{font-size:15px;color:var(--muted)}
+.ex{font-size:11px;color:var(--muted);font-style:italic}
+
+/* v24: falar com um atendente */
+.humano{padding:4px 20px 18px;text-align:center}
+.humano button{background:none;border:0;color:var(--muted);font:600 14px var(--body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:8px}
+.humano button:hover{color:var(--ink)}
+.sheet{position:fixed;inset:0;background:rgba(10,18,26,.55);display:flex;align-items:flex-end;justify-content:center;z-index:50;padding:16px}
+.sheet .pn{background:var(--surface);color:var(--ink);width:100%;max-width:420px;border-radius:16px;padding:20px;display:grid;gap:12px;animation:in .25s ease}
+.sheet h3{font:700 24px/1.1 var(--display);margin:0}
+.sheet .bth{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:12px;border:0;font:700 17px var(--body);cursor:pointer;text-decoration:none}
+.sheet .wa{background:#25D366;color:#fff}
+.sheet .tl{background:var(--brand);color:#fff}
+.sheet .vt{background:none;border:1.5px solid var(--line);color:var(--ink)}
+.sheet .num{font:500 13px var(--mono);color:var(--muted);text-align:center}
+</style>
+
+</head>
+<body>
+<p class="proto">AMBIENTE DE TESTE · a SS é salva com "TESTE - DESCONSIDERAR"</p>
+<div class="device">
+  <header class="top">
+    <div class="row">
+      <button class="back" id="back" hidden>‹ Voltar</button>
+      <div class="logo">FF <span>LOGÍSTICA</span></div>
+    </div>
+    <div class="stripe"></div>
+  </header>
+  <div class="progress"><i id="bar"></i></div>
+  <main id="app"></main>
+  <div class="humano" id="humano"><button type="button" onclick="abrirHumano()">Prefere falar com um atendente?</button></div>
+</div>
+<div class="sheet" id="sheet" hidden onclick="if(event.target===this)fecharHumano()">
+  <div class="pn" role="dialog" aria-modal="true" aria-labelledby="shT">
+    <h3 id="shT">Falar com um atendente</h3>
+    <p class="lead" id="shTx">Escolha como prefere falar com a nossa equipe. O que você já preencheu segue junto na mensagem.</p>
+    <a class="bth wa" id="shWa" href="#" target="_blank" rel="noopener" onclick="pedirHumano('WhatsApp')">💬 Conversar pelo WhatsApp</a>
+    <a class="bth tl" id="shTl" href="#" onclick="pedirHumano('Ligação')">📞 Ligar para a FF Logística</a>
+    <p class="num" id="shNum"></p>
+    <button class="bth vt" type="button" onclick="fecharHumano()">Voltar ao formulário</button>
+  </div>
+</div>
+
+<script>
+const ICON = {
+  quote:'<svg viewBox="0 0 40 40" class="ico"><rect x="8" y="5" width="24" height="30" rx="2"/><path d="M13 13h14M13 19h14M13 25h8"/><circle class="fill" cx="29" cy="30" r="6"/></svg>',
+  tool:'<svg viewBox="0 0 40 40" class="ico"><path d="M25 6a8 8 0 0 0-8 11L6 28l6 6 11-11a8 8 0 0 0 11-8l-5 5-5-1-1-5z"/><circle class="fill" cx="9" cy="31" r="2.5"/></svg>',
+  rent:'<svg viewBox="0 0 40 40" class="ico"><path d="M6 18 20 7l14 11v15H6z"/><rect class="fill" x="15" y="22" width="10" height="11"/></svg>',
+  own:'<svg viewBox="0 0 40 40" class="ico"><circle cx="20" cy="14" r="6"/><path d="M8 34c1-7 6-11 12-11s11 4 12 11"/><circle class="fill" cx="30" cy="10" r="4"/></svg>',
+  fork:'<svg viewBox="0 0 40 40" class="ico"><path d="M8 28V12h10l4 8v8"/><path d="M28 6v24h8"/><circle cx="11" cy="31" r="3"/><circle cx="21" cy="31" r="3"/><rect class="fill" x="10" y="14" width="6" height="5"/></svg>',
+  battery:'<svg viewBox="0 0 40 40" class="ico"><rect x="6" y="11" width="26" height="20" rx="2"/><path d="M32 17h3v8h-3"/><path class="fill" d="M20 14l-5 8h5l-2 6 6-9h-5z"/></svg>',
+  charger:'<svg viewBox="0 0 40 40" class="ico"><rect x="9" y="6" width="18" height="28" rx="2"/><path d="M27 20h5v8"/><path d="M14 34v2M22 34v2"/><path class="fill" d="M19 11l-4 7h4l-2 6 6-8h-4z"/></svg>',
+  elec:'<svg viewBox="0 0 40 40" class="ico"><path class="fill" d="M22 4 9 22h9l-3 14 15-20h-9z"/></svg>',
+  hyd:'<svg viewBox="0 0 40 40" class="ico"><path d="M20 6s-10 12-10 19a10 10 0 0 0 20 0C30 18 20 6 20 6z"/><path class="fill" d="M14 25a6 6 0 0 0 12 0z"/></svg>',
+  mech:'<svg viewBox="0 0 40 40" class="ico"><circle cx="20" cy="20" r="6"/><path d="M20 5v5M20 30v5M5 20h5M30 20h5M9 9l4 4M27 27l4 4M31 9l-4 4M13 27l-4 4"/><circle class="fill" cx="20" cy="20" r="2.5"/></svg>',
+  stop:'<svg viewBox="0 0 40 40" class="ico"><path d="M14 5h12l9 9v12l-9 9H14l-9-9V14z"/><rect class="fill" x="13" y="18" width="14" height="4"/></svg>',
+  cart:'<svg viewBox="0 0 40 40" class="ico"><path d="M5 27h28"/><path d="M31 27V12"/><rect class="fill" x="9" y="14" width="18" height="11" rx="1.5"/><circle cx="11" cy="31" r="3"/><circle cx="27" cy="31" r="3"/></svg>',
+  check:'<svg viewBox="0 0 40 40" class="ico"><rect x="7" y="7" width="26" height="26" rx="4"/><path class="tick" d="M13 20l5 5 10-11"/></svg>'
+};
+
+// ---------------------------------------------------------------- v25: nuvem (Google Apps Script)
+const API = 'https://script.google.com/macros/s/AKfycby-4TprXJgw1HpQZ0F5Qvgy7kdT0G9QqZ2wJRATFL3vZsctJomjxKTZNK6Zoy3O2Fmu/exec';                 // preenchido por gerar_site_v25_TESTE.py
+const QR_TAG = (new URLSearchParams(location.search).get('tag') || '').toUpperCase().replace(/[^A-Z0-9\-]/g, '').slice(0, 12);
+async function apiGet(api, q){
+  const u = API + '?api=' + api + Object.entries(q || {}).map(([k, v]) => '&' + k + '=' + encodeURIComponent(v || '')).join('');
+  const r = await fetch(u); return r.json();
+}
+async function apiPost(acao, obj, extra){
+  const r = await fetch(API, Object.assign({method:'POST', body: JSON.stringify(Object.assign({acao}, obj))}, extra || {}));
+  return r.json();
+}
+
+// ---------------------------------------------------------------- estado
+const CAMPOS_ITEM = ['tag','marca','modelo','serie','parado','cat','relato','midias','cli_sis','cli_conf'];
+const S = {fluxo:null, origem:'', equips:[], k:0, itens:[], empresa:'', nome:'', cel:'', email:'', necessidade:'',
+           tag:'', marca:'', modelo:'', serie:'', parado:'', cat:'', relato:'', midias:[], cli_sis:'', cli_conf:''};
+const hist = [];
+let RES = [], _prot = null;
+const app = document.getElementById('app'), bar = document.getElementById('bar'), backBtn = document.getElementById('back');
+const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const primeiro = n => esc((n || '').trim().split(/\s+/)[0] || 'cliente');
+const ORDEM_EQ = ['EMP','BAT','CAR','CRB'];
+const ROT = {LOC:'Locação FF Logística', PROP:'Equipamento próprio', EMP:'Empilhadeira', BAT:'Bateria', CAR:'Carregador de baterias', CRB:'Carrinho de baterias',
+  ELE:'Elétrico', HID:'Hidráulico', MEC:'Mecânico', SIM:'Sim', NAO:'Não', COR:'Corretiva', PRE:'Preventiva', VIS:'Visita técnica'};
+const EX_TAG = {EMP:'M148', BAT:'B33', CAR:'C06', CRB:'CB01'};
+const DA = {EMP:'da empilhadeira', BAT:'da bateria', CAR:'do carregador', CRB:'do carrinho de baterias'};
+
+function itemVazio(){ return {tag:'', marca:'', modelo:'', serie:'', parado:'', cat:'', relato:'', midias:[], cli_sis:'', cli_conf:''}; }
+function salvarItem(){ const it = {}; CAMPOS_ITEM.forEach(c => it[c] = S[c]); S.itens[S.k] = it; }
+function carregarItem(k){ const it = S.itens[k] || itemVazio(); CAMPOS_ITEM.forEach(c => S[c] = Array.isArray(it[c]) ? [...it[c]] : it[c]); }
+const eqAtual = () => S.equips[S.k];
+const multi = () => S.equips.length > 1;
+const etapa = () => multi() ? `Equipamento ${S.k + 1} de ${S.equips.length} · ${ROT[eqAtual()]}` : `Atendimento · ${ROT[eqAtual()] || ''}`;
+// v15: TAG em estêncil na animação (só Locação FF; equipamento próprio sem TAG não mostra plaqueta)
+function tagTxt(eq){
+  if (S.origem !== 'LOC') return '';
+  const i = S.equips.findIndex((e, k) => e === eq && S.itens[k] && S.itens[k].tag);
+  return i < 0 ? '' : esc(String(S.itens[i].tag).toUpperCase().replace(/\s+/g,'').slice(0,7));
+}
+function tagEmp(m){ const t = tagTxt('EMP'); return t ? `<text class="stc" transform="${m}" style="font-size:13px">${t}</text>` : ''; }
+function tagBat(m){ const t = tagTxt('BAT'); return t ? `<text class="stc" transform="${m}" style="font-size:10px">${t}</text>` : ''; }
+function tagCar(m){ const t = tagTxt('CAR'); return t ? `<text class="stc" transform="${m}" style="font-size:7.5px">${t}</text>` : ''; }
+const identItem = it => S.origem === 'LOC' ? (it.tag ? `TAG ${it.tag}` : it.serie ? `série ${it.serie}` : 'sem TAG') : `${it.marca} ${it.modelo}`.trim();
+
+// ---------------------------------------------------------------- navegação
+const POR_ITEM = ['ident','parado','cat','relato'];
+function progresso(id){
+  if (id === 'inicio') return 0;
+  if (id === 'ajuda') return 8;
+  if (S.fluxo === 'or') return 50;
+  if (id === 'origem') return 14;
+  if (id === 'equip') return 20;
+  const i = POR_ITEM.indexOf(['confemp','tagnf'].includes(id) ? 'ident' : id);
+  if (i >= 0) { const n = Math.max(S.equips.length, 1); return 22 + 58 * ((S.k * 4 + i + 1) / (n * 4)); }
+  return {dados: 86, revisao: 94}[id] ?? 100;
+}
+function go(id, push = true){
+  if (id === '__fluxo') id = S.fluxo === 'or' ? 'orc' : 'origem';
+  if (id === '__cat') { if (eqAtual() === 'EMP') id = 'cat'; else { S.cat = ''; id = 'relato'; } }   // v17: só empilhadeira
+  if (id === '__proxItem') {
+    salvarItem();
+    if (S.k < S.equips.length - 1) { if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k}); S.k++; carregarItem(S.k); render('ident'); return; }
+    id = 'dados';
+  }
+  if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
+  render(id);
+}
+const CHAVE = 'ff_atend_v26', VALIDADE = 2 * 60 * 60 * 1000;
+let RECARREGOU = false;
+function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
+function salvarEstado(){
+  try {
+    const cur = app.dataset.cur || '';
+    if (['inicio','proc','fim','fimorc'].includes(cur)) { sessionStorage.removeItem(CHAVE); localStorage.removeItem(CHAVE); return; }
+    if (POR_ITEM.includes(cur)) salvarItem();
+    const copia = JSON.parse(JSON.stringify(Object.assign({}, S, {midias: []}), (k, v) => (k === 'midias' ? [] : v)));
+    copia.midias = S.midias.filter(m => m.status === 'ok' && !m.removida).map(midiaLeve);
+    copia.itens = S.itens.map(it => it ? Object.assign({}, it, {midias: (it.midias || []).filter(m => m.status === 'ok' && !m.removida).map(midiaLeve)}) : it);
+    const dados = JSON.stringify({t: Date.now(), cur, k: S.k, S: copia, hist, lid: _lid});
+    sessionStorage.setItem(CHAVE, dados); localStorage.setItem(CHAVE, dados);
+  } catch (e) {}
+}
+function restaurarEstado(){
+  try {
+    const txt = sessionStorage.getItem(CHAVE) || localStorage.getItem(CHAVE);
+    if (!txt) return false;
+    const d = JSON.parse(txt);
+    if (!d || Date.now() - d.t > VALIDADE || !d.cur || !TELAS[d.cur]) return false;
+    Object.assign(S, d.S); hist.length = 0; (d.hist || []).forEach(h => hist.push(h)); _lid = d.lid || 0;
+    app.dataset.cur = ''; RECARREGOU = d.cur === 'relato';
+    render(d.cur === 'proc' ? 'revisao' : d.cur);
+    return true;
+  } catch (e) { return false; }
+}
+function render(id){
+  app.dataset.cur = id;
+  bar.style.width = progresso(id) + '%';
+  backBtn.hidden = ['inicio','proc','fim','fimorc'].includes(id);
+  document.getElementById('humano').hidden = id === 'proc';   // v24
+  app.innerHTML = '<section class="screen">' + TELAS[id]() + '</section>';
+  window.scrollTo({top:0});
+  const f = app.querySelector('input:not([type=file]),textarea'); if (f && matchMedia('(pointer:fine)').matches) f.focus();
+  if (AFTER[id]) AFTER[id]();
+  if (id !== 'relato') RECARREGOU = false;
+  salvarEstado();
+}
+backBtn.onclick = () => {
+  if (!hist.length) return;
+  const h = hist.pop();
+  if (POR_ITEM.includes(app.dataset.cur)) salvarItem();
+  if (h.k !== S.k) { S.k = h.k; carregarItem(S.k); }
+  render(h.id);
+};
+
+function opcoes(campo, itens, prox, two){
+  return `<div class="opts ${two ? 'two' : ''}">` + itens.map(([v, ico, t, d]) =>
+    `<button class="opt ${S[campo] === v ? 'sel' : ''}" data-c="${campo}" data-v="${esc(v)}" data-n="${prox}">${ICON[ico]}<span>${t}${d ? `<small>${d}</small>` : ''}</span></button>`).join('') + '</div>';
+}
+app.addEventListener('click', e => {
+  const rm = e.target.closest('[data-rm]');
+  if (rm) {
+    const k = S.midias.findIndex(x => x.lid == rm.dataset.rm);
+    if (k >= 0) { S.midias[k].removida = true; S.midias.splice(k, 1); }
+    rm.closest('.mth').remove(); return;
+  }
+  const th = e.target.closest('.mth.erro');
+  if (th) { const x = S.midias.find(x => x.lid == th.dataset.lid); if (x) reenviar(x); return; }
+  const m = e.target.closest('.optm');
+  if (m) {
+    const v = m.dataset.v, i = S.equips.indexOf(v);
+    if (i >= 0) S.equips.splice(i, 1); else S.equips.push(v);
+    S.equips.sort((a, b) => ORDEM_EQ.indexOf(a) - ORDEM_EQ.indexOf(b));
+    m.classList.toggle('sel', S.equips.includes(v));
+    m.setAttribute('aria-pressed', S.equips.includes(v));
+    document.getElementById('err').textContent = '';
+    return;
+  }
+  const b = e.target.closest('.opt'); if (!b || !b.dataset.n) return;   // v16: botões com onclick próprio (confemp)
+  S[b.dataset.c] = b.dataset.v;
+  b.classList.add('sel');
+  setTimeout(() => go(b.dataset.n), 140);
+});
+
+function campo(id, rot, tipo = 'text', extra = '', obrig = true){
+  return `<div><label for="${id}">${rot} ${obrig ? '<span class="req">*</span>' : ''}</label>` +
+    (tipo === 'area' ? `<textarea id="${id}" ${extra}>${esc(S[id])}</textarea>` : `<input id="${id}" type="${tipo}" value="${esc(S[id])}" ${extra}>`) + '</div>';
+}
+function ler(ids){ ids.forEach(i => { const el = document.getElementById(i); if (el) S[i] = el.value.trim(); }); }
+function validar(ids){
+  ler(ids);
+  const falta = ids.filter(i => !S[i]);
+  document.getElementById('err').textContent = falta.length ? 'Preencha os campos marcados com *.' : '';
+  if (falta.length) document.getElementById(falta[0]).focus();
+  return !falta.length;
+}
+function mascaraCel(el){
+  el.addEventListener('input', () => {
+    let d = el.value.replace(/\D/g,'').slice(0,11);
+    el.value = d.length > 6 ? `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}` : d.length > 2 ? `(${d.slice(0,2)}) ${d.slice(2)}` : d;
+  });
+}
+// ---------------------------------------------------------------- fotos e vídeo (v11)
+// Cada arquivo sobe sozinho assim que é escolhido (até 5 tentativas). A SS não depende da mídia.
+let _lid = 0;
+const LIM_FOTOS = 4, LIM_VIDEO_SEG = 30;
+const RX_VIDEO = /\.(mp4|mov|3gp|3g2|webm|m4v|mkv|avi|mpe?g|wmv)$/i, RX_FOTO = /\.(jpe?g|png|heic|heif|webp|gif|bmp|tiff?)$/i;
+const fotosDe = it => it.midias.filter(m => m.tipo === 'foto');
+const videoDe = it => it.midias.find(m => m.tipo === 'video');
+function statusTxt(m){ return m.status === 'ok' ? '✓ recebido' : m.status === 'erro' ? '⚠ tocar p/ reenviar' : (m.tent > 1 ? 'tentando de novo… ' : 'enviando ') + m.pct + '%'; }
+function thumbHtml(m){
+  const vis = m.thumb ? (m.tipo === 'video' ? `<video src="${m.thumb}" muted playsinline preload="metadata"></video>` : `<img src="${m.thumb}" alt="Foto anexada">`)
+                      : `<div class="ph">${m.tipo === 'video' ? '🎬' : '📷'}</div>`;
+  return `<div class="mth ${m.status}" id="m${m.lid}" data-lid="${m.lid}">${vis}<span class="tg">${m.tipo === 'video' ? '▶ ' + (m.seg ? m.seg + 's' : 'vídeo') : ''}</span>` +
+         `<span class="st">${statusTxt(m)}</span><button type="button" class="rm" data-rm="${m.lid}" aria-label="Remover">×</button></div>`;
+}
+function thumbsHtml(it){ return it.midias.map(thumbHtml).join(''); }
+function midiaTxt(it){
+  const f = fotosDe(it).length, v = videoDe(it), err = it.midias.filter(m => m.status === 'erro').length;
+  return (f ? f + ' foto(s)' : 'nenhuma foto') + (v ? ' + 1 vídeo' + (v.seg ? ' (' + v.seg + 's)' : '') : '') + (err ? ` · ${err} com falha no envio` : '');
+}
+function atualizarThumb(m){
+  const el = document.getElementById('m' + m.lid); if (!el) return;
+  el.className = 'mth ' + m.status; el.querySelector('.st').textContent = statusTxt(m);
+}
+function todasMidias(){
+  const set = new Set(); S.itens.forEach(it => it && it.midias && it.midias.forEach(m => set.add(m))); S.midias.forEach(m => set.add(m));
+  return [...set].filter(m => !m.removida);
+}
+// v25: cada arquivo sobe em partes de 2 MB para a nuvem; parte já enviada não sobe de novo
+const PARTE = 2 * 1024 * 1024;
+const novoMid = () => [...crypto.getRandomValues(new Uint8Array(6))].map(b => b.toString(16).padStart(2, '0')).join('');
+function b64Parte(blob){
+  return new Promise((res, rej) => { const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.onerror = rej; fr.readAsDataURL(blob); });
+}
+function postParte(corpo){
+  // sem x.upload.onprogress: ouvir o progresso faria o navegador pedir "preflight", que o Apps Script não aceita
+  return new Promise((res, rej) => {
+    const x = new XMLHttpRequest(); x.open('POST', API); x.timeout = 5 * 60 * 1000;
+    x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch (e) {} j.ok ? res(j) : rej(new Error(j.erro || 'falha')); };
+    x.onerror = () => rej(new Error('rede')); x.ontimeout = () => rej(new Error('tempo'));
+    x.send(corpo);
+  });
+}
+async function subir(m){
+  if (m.removida || m.subindo) return;
+  m.subindo = true; m.status = 'enviando'; m.tent++; atualizarThumb(m);
+  if (!m.mid) m.mid = novoMid();
+  m.feitas = m.feitas || new Set();
+  const total = Math.max(1, Math.ceil(m.blob.size / PARTE));
+  try {
+    if (total > 40) throw new Error('arquivo grande demais');
+    for (let i = 0; i < total; i++) {
+      if (m.removida) return;
+      if (m.feitas.has(i)) continue;
+      m.pct = Math.min(95, Math.round((m.feitas.size + 0.3) * 100 / total)); atualizarThumb(m);
+      const b64 = await b64Parte(m.blob.slice(i * PARTE, (i + 1) * PARTE));
+      await postParte(JSON.stringify({acao:'midia_parte', mid:m.mid, parte:i, total, nome:m.nome, mime:m.blob.type || '',
+                                      tipo:m.tipo, bytes:m.blob.size, b64}));
+      m.feitas.add(i);
+      m.pct = Math.min(99, Math.round(m.feitas.size * 100 / total)); atualizarThumb(m);
+    }
+    m.subindo = false; m.status = 'ok'; m.pct = 100; atualizarThumb(m);
+  } catch (e) {
+    m.subindo = false;
+    if (m.removida) return;
+    if (m.tent < 5 && String(e.message) !== 'arquivo grande demais') { m.status = 'enviando'; atualizarThumb(m); setTimeout(() => subir(m), 2000 * m.tent); }
+    else { m.status = 'erro'; atualizarThumb(m); }
+  }
+}
+function reenviar(m){ m.tent = 0; subir(m); }
+window.addEventListener('online', () => todasMidias().filter(m => m.status === 'erro').forEach(reenviar));
+function addMidia(tipo, blob, nome, thumb, seg){
+  const m = {lid: ++_lid, tipo, blob, nome, thumb, seg, status: 'enviando', pct: 0, tent: 0, mid: ''};
+  S.midias.push(m);
+  const th = document.getElementById('thumbs'); if (th) th.insertAdjacentHTML('beforeend', thumbHtml(m));
+  subir(m);
+}
+async function reduzirFoto(f){
+  // reduz no próprio celular (JPG, maior lado 1600 px); se o navegador não conseguir abrir (ex.: HEIC no PC), sobe o original
+  try {
+    let bmp;
+    try { bmp = await createImageBitmap(f, {imageOrientation: 'from-image'}); } catch (e) { bmp = await createImageBitmap(f); }
+    const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+    if (b && b.size > 0) return b;
+  } catch (e) {}
+  return null;
+}
+function lerDuracao(f){
+  return new Promise(res => {
+    const url = URL.createObjectURL(f), v = document.createElement('video');
+    let feito = false; const fim = (seg, ok) => { if (feito) return; feito = true; res({url: ok ? url : null, seg}); if (!ok) URL.revokeObjectURL(url); };
+    v.preload = 'metadata'; v.muted = true;
+    v.onloadedmetadata = () => fim(isFinite(v.duration) ? Math.round(v.duration) : null, true);
+    v.onerror = () => fim(null, false);
+    setTimeout(() => fim(null, false), 5000);
+    v.src = url;
+  });
+}
+async function escolherArquivos(lista){
+  const errm = document.getElementById('errmid'); const msgs = [];
+  for (const f of lista) {
+    const ehVideo = (f.type || '').startsWith('video/') || RX_VIDEO.test(f.name);
+    const ehFoto = !ehVideo && ((f.type || '').startsWith('image/') || RX_FOTO.test(f.name));
+    if (ehVideo) {
+      if (videoDe(S)) { msgs.push('Você já adicionou um vídeo. Envie apenas 1 vídeo por equipamento.'); continue; }
+      const {url, seg} = await lerDuracao(f);
+      if (seg && seg > LIM_VIDEO_SEG + 1) { msgs.push(`Este vídeo tem ${seg} segundos. Grave um trecho de até ${LIM_VIDEO_SEG} segundos mostrando o problema.`); if (url) URL.revokeObjectURL(url); continue; }
+      addMidia('video', f, f.name, url, seg);
+    } else if (ehFoto) {
+      if (fotosDe(S).length >= LIM_FOTOS) { msgs.push(`Limite de ${LIM_FOTOS} fotos atingido.`); continue; }
+      const b = await reduzirFoto(f);
+      if (b) addMidia('foto', b, f.name.replace(/\.[^.]+$/, '') + '.jpg', URL.createObjectURL(b), null);
+      else addMidia('foto', f, f.name, null, null);
+    } else {
+      msgs.push(`Não reconhecemos o arquivo "${f.name}". Envie foto ou vídeo.`);
+    }
+  }
+  if (errm) errm.textContent = msgs.join(' ');
+}
+
+// ---------------------------------------------------------------- telas
+const TELAS = {
+  inicio: () => `
+    <p class="step">${saudacao()}!</p>
+    <h1>Seu equipamento parou ou está apresentando problemas?</h1>
+    <p class="lead">Nós cuidamos disso. Em poucos passos você registra a solicitação e já recebe o número da SS (Solicitação de Serviço).</p>
+    <p style="font-weight:600">Como podemos chamar você?</p>
+    <div class="fields">
+      ${campo('nome','Seu nome','text','autocomplete="name"')}
+    </div>
+    <p class="err" id="err"></p>
+    <div class="cta"><button class="btn" onclick="if(validar(['nome'])){S.nome=nomeProprio(S.nome);go('ajuda')}">Iniciar atendimento</button>
+    <p class="hint" style="text-align:center">Tenha à mão a TAG do equipamento (nº da frota FF). Se puder, encaminhe foto(s) e um vídeo de até 30 segundos para agilizarmos a manutenção.</p></div>`,
+
+  ajuda: () => `
+    <p class="step">${esc(S.empresa) || 'Atendimento FF Logística'}</p>
+    <h2>${primeiro(S.nome)}, como podemos ajudar?</h2>
+    ${opcoes('fluxo', [['at','tool','Atendimento técnico','Equipamento com problema ou manutenção'],['or','quote','Orçamento','Locação, venda, peças ou serviços']], '__fluxo')}`,
+
+  orc: () => `
+    <p class="step">Orçamento</p>
+    <h2>${primeiro(S.nome)}, conte o que você precisa</h2>
+    <p class="lead">Quanto mais detalhes, mais certeira será a nossa proposta. Retornamos em até 24 horas.</p>
+    <div class="fields">
+      ${campo('empresa','Empresa','text','autocomplete="organization"')}
+      ${campo('cel','WhatsApp','tel','inputmode="tel" placeholder="(21) 99999-9999"')}
+      ${campo('email','E-mail','email','autocomplete="email"',false)}
+      ${campo('necessidade','O que você precisa?','area','placeholder="Ex.: locação de 2 empilhadeiras elétricas por 6 meses"')}
+    </div>
+    <p class="err" id="err"></p>
+    <div class="cta"><button class="btn" id="enviarOrc">Enviar pedido</button></div>`,
+
+  fimorc: () => `
+    <div class="ticket"><div class="stripe"></div><div class="in" style="display:grid;gap:10px">
+      <h2>Prezado(a) ${primeiro(S.nome)}, recebemos seu pedido.</h2>
+      <p>Nossa equipe entrará em contato em até 24 horas, a fim de entendermos sua necessidade.</p>
+      <p class="thanks">Protocolo <strong style="font-family:var(--mono)">${esc(_prot || '')}</strong></p>
+    </div></div>
+    <p class="thanks">A FF Logística agradece o contato.</p>
+    <div class="cta"><button class="btn ghost" onclick="reiniciar()">Voltar ao início</button></div>`,
+
+  origem: () => `
+    <p class="step">Atendimento técnico</p>
+    <h2>O equipamento é…</h2>
+    ${opcoes('origem', [['LOC','rent','Locação FF Logística','Alugado com a gente'],['PROP','own','Próprio','Da sua empresa']], 'equip')}`,
+
+  equip: () => `
+    <p class="step">Atendimento técnico</p>
+    <h2>Quais equipamentos precisam de atendimento?</h2>
+    <p class="lead">Marque um ou mais. Para cada equipamento abrimos uma SS (Solicitação de Serviço).</p>
+    <div class="opts">${ORDEM_EQ.map(v => `<button class="opt optm ${S.equips.includes(v) ? 'sel' : ''}" data-v="${v}" aria-pressed="${S.equips.includes(v)}">${ICON[{EMP:'fork',BAT:'battery',CAR:'charger',CRB:'cart'}[v]]}<span>${ROT[v]}</span></button>`).join('')}</div>
+    <p class="err" id="err"></p>
+    <div class="cta"><button class="btn" id="eqOk">Continuar</button></div>`,
+
+  ident: () => S.origem === 'LOC' ? `
+    <p class="step">${etapa()}</p>
+    <h2>Identifique ${{EMP:'a empilhadeira', BAT:'a bateria', CAR:'o carregador', CRB:'o carrinho de baterias'}[eqAtual()]}</h2>
+    <div class="tagplate"><span class="plate">${EX_TAG[eqAtual()]}</span><span>A TAG (nº da frota FF) fica na lateral ${DA[eqAtual()]}. Caso não localize, informe o nº de série (plaqueta).${eqAtual() === 'CRB' ? ' Se o carrinho ainda não tiver TAG, pode seguir sem preencher.' : ''}</span></div>
+    <div class="fields">
+      ${campo('tag','TAG (nº da frota FF)','text','autocapitalize="characters" placeholder="Ex.: ' + EX_TAG[eqAtual()] + '" style="text-transform:uppercase;font-family:var(--mono)"', false)}
+      ${campo('serie','Nº de série','text','autocapitalize="characters" style="text-transform:uppercase;font-family:var(--mono)"', false)}
+    </div>
+    <p class="hint">Informe a TAG ou o nº de série.</p>
+    <p class="err" id="err"></p>
+    <div class="cta"><button class="btn" onclick="identLoc()">Continuar</button></div>` : `
+    <p class="step">${etapa()}</p>
+    <h2>Conte sobre o equipamento</h2>
+    <p class="lead">Essas informações ficam na plaqueta do fabricante.</p>
+    <div class="fields">
+      ${campo('marca','Marca','text','placeholder="Ex.: Still, Linde, Paletrans, Moura"')}
+      ${campo('modelo','Modelo','text','placeholder="Ex.: FMX 17"')}
+      ${campo('serie','Nº de série','text','',false)}
+    </div>
+    <p class="err" id="err"></p>
+    <div class="cta"><button class="btn" onclick="if(validar(['marca','modelo'])){ler(['serie']);go('parado')}">Continuar</button></div>`,
+
+  relato: () => `
+    <p class="step">${etapa()}${S.origem === 'LOC' ? ' · ' + esc(S.tag || S.serie) : ''}</p>
+    <h2>Descreva o problema ${DA[eqAtual()]}</h2>
+    <p class="lead">Quanto mais detalhes, melhor o técnico se prepara. Fotos ajudam muito no diagnóstico.</p>
+    <div class="fields">
+      ${campo('relato','Relato do problema','area','placeholder="Ex.: desde ontem não levanta carga acima de 1 metro e faz barulho no motor da bomba."')}
+      <div><label style="margin-bottom:2px">Fotos e vídeo</label>
+      <p class="hint" style="margin:0 0 8px">Opcional, mas ajuda muito o técnico: até 4 fotos e 1 vídeo de até 30 segundos.</p>
+      <div class="mbtns">
+        <label class="mb" for="fCam">📷<span>Tirar foto</span></label>
+        <label class="mb" for="fVid">🎥<span>Gravar vídeo</span></label>
+        <label class="mb" for="fGal">🖼️<span>Fotos da galeria</span></label>
+        <label class="mb" for="fGalV">🎞️<span>Vídeo da galeria</span></label>
+      </div>
+      <input id="fCam" class="fmid" type="file" accept="image/*" capture="environment" hidden>
+      <input id="fVid" class="fmid" type="file" accept="video/*" capture="environment" hidden>
+      <input id="fGal" class="fmid" type="file" accept="image/*" multiple hidden>
+      <input id="fGalV" class="fmid" type="file" accept="video/*" hidden>
+      ${RECARREGOU ? '<p class="hint" style="color:#B45309;margin-top:8px">O celular recarregou a página ao abrir a câmera. Seus dados foram mantidos. Se a foto não aparecer abaixo, tire a foto pela câmera do celular e use <b>Fotos da galeria</b>.</p>' : ''}
+      </div>
+      <p class="err" id="errmid"></p>
+      <div class="thumbs" id="thumbs">${thumbsHtml(S)}</div>
+    </div>
+    <p class="err" id="err"></p>
+    ${S.k < S.equips.length - 1 ? `<p class="hint">Em seguida: ${ROT[S.equips[S.k + 1]]}.</p>` : ''}
+    <div class="cta"><button class="btn" onclick="if(validar(['relato']))go('__proxItem')">Continuar</button></div>`,
+
+  parado: () => `
+    <p class="step">${etapa()}${S.origem === 'LOC' ? ' · ' + esc(S.tag || S.serie) : ''}</p>
+    <h2>${{EMP:'A empilhadeira', BAT:'A bateria', CAR:'O carregador', CRB:'O carrinho de baterias'}[eqAtual()]} está parad${['CAR','CRB'].includes(eqAtual()) ? 'o' : 'a'}?</h2>
+    ${opcoes('parado', [['SIM','stop','Sim','Não está funcionando'],['NAO','check','Não','Funciona, mas com problema']], '__cat', true)}`,
+
+  cat: () => `
+    <p class="step">${etapa()}${S.origem === 'LOC' ? ' · ' + esc(S.tag || S.serie) : ''}</p>
+    <h2>O problema, a princípio, parece ser:</h2>
+    ${opcoes('cat', [['ELE','elec','Elétrico','Não liga, painel, bateria não carrega'],['HID','hyd','Hidráulico','Vazamento, não levanta, garfo desce sozinho'],['MEC','mech','Mecânico','Ruído, rodas, freio, direção']], 'relato')}
+    <p class="hint">Não tem certeza? Escolha o mais próximo. O técnico confirma na avaliação.</p>`,
+
+  tagnf: () => `
+    <p class="step">${etapa()}</p>
+    <h2>Não localizamos ${S.tag ? 'a TAG <span style="font-family:var(--mono)">' + esc(S.tag) + '</span>' : 'o nº de série <span style="font-family:var(--mono)">' + esc(S.serie) + '</span>'}</h2>
+    <div class="tagplate"><span class="plate">${EX_TAG[eqAtual()]}</span><span>Confira a TAG (nº da frota FF) na lateral ${DA[eqAtual()]}. Ela tem letras e números, como ${EX_TAG[eqAtual()]}.</span></div>
+    <div class="cta">
+      <button class="btn" onclick="tagCorrigir()">Corrigir a TAG</button>
+      <button class="btn ghost" onclick="tagSeguir()">A TAG está correta, continuar</button>
+      <p class="hint" style="text-align:center">Se continuar, registramos a solicitação mesmo assim e nossa equipe confere o equipamento.</p>
+    </div>`,
+
+  empsug: () => `
+    <p class="step">Contato</p>
+    <h2>Você quis dizer <span style="white-space:normal">${esc(S.emp_sug)}</span>?</h2>
+    <p class="lead">Você digitou: <strong>${esc(S.empresa)}</strong></p>
+    <div class="cta">
+      <button class="btn" onclick="empAceita()">Sim, é essa empresa</button>
+      <button class="btn ghost" onclick="empCorrigir()">Corrigir o nome</button>
+      <button class="btn ghost" onclick="empSeguir()">O nome está correto, continuar</button>
+    </div>`,
+
+  empnf: () => `
+    <p class="step">Contato</p>
+    <h2>Não localizamos a empresa <span style="white-space:normal">${esc(S.empresa)}</span> no nosso cadastro</h2>
+    <p class="lead">Confira se o nome está completo e correto (de preferência a razão social).</p>
+    <div class="cta">
+      <button class="btn" onclick="empCorrigir()">Corrigir o nome</button>
+      <button class="btn ghost" onclick="empSeguir()">O nome está correto, continuar</button>
+      <p class="hint" style="text-align:center">Se continuar, registramos a solicitação mesmo assim e nossa equipe confere o cadastro.</p>
+    </div>`,
+
+  confemp: () => `
+    <p class="step">${etapa()} · ${esc(S.tag || S.serie)}</p>
+    <h2>Este equipamento está cadastrado para:</h2>
+    <div class="box" style="font:700 22px/1.2 var(--display);letter-spacing:.02em">${esc(S.cli_sis)}</div>
+    <p class="lead">${primeiro(S.nome)}, confere?</p>
+    <div class="opts two">
+      <button class="opt" onclick="confEmp(true)">${ICON.check}<span>Sim, confere</span></button>
+      <button class="opt" onclick="confEmp(false)">${ICON.stop}<span>Não confere</span></button>
+    </div>
+    <p class="hint">Se não conferir, verifique a TAG (toque em ‹ Voltar) ou siga em frente e informe o nome da empresa no final.</p>`,
+
+  dados: () => `
+    <p class="step">Contato</p>
+    <h2>${primeiro(S.nome)}, falta pouco. Como falamos com você?</h2>
+    <div class="fields">
+      ${precisaEmpresa() ? campo('empresa','Empresa','text','autocomplete="organization"') : ''}
+      ${campo('cel','Celular / WhatsApp','tel','inputmode="tel" placeholder="(21) 99999-9999"')}
+      ${campo('email','E-mail','email','autocomplete="email" placeholder="Para receber o resumo"',false)}
+    </div>
+    <p class="err" id="err"></p>
+    <div class="cta"><button class="btn" onclick="dadosOk(this)">Revisar</button></div>`,
+
+  revisao: () => `
+    <p class="step">Revisão</p>
+    <h2>${primeiro(S.nome)}, confira antes de enviar</h2>
+    ${S.itens.map((it, i) => `<div class="box"><dl>
+      <dt>${multi() ? 'Equipamento ' + (i + 1) : 'Equipamento'}</dt><dd><strong>${ROT[S.equips[i]]}</strong> · ${ROT[S.origem]}</dd>
+      ${S.origem === 'LOC' ? `<dt>TAG (nº da frota FF)</dt><dd style="font-family:var(--mono)">${esc(it.tag) || '-'}</dd><dt>Nº de série</dt><dd style="font-family:var(--mono)">${esc(it.serie) || '-'}</dd>` : `<dt>Marca/modelo</dt><dd>${esc(it.marca)} ${esc(it.modelo)}${it.serie ? ' · série ' + esc(it.serie) : ''}</dd>`}
+      <dt>Equipamento parado</dt><dd>${ROT[it.parado]}</dd>
+      ${it.cat ? `<dt>Problema</dt><dd>${ROT[it.cat]}</dd>` : ''}
+      <dt>Relato</dt><dd>${esc(it.relato)}</dd>
+      <dt>Fotos / vídeo</dt><dd>${midiaTxt(it)}</dd>
+    </dl></div>`).join('')}
+    <div class="box"><dl><dt>Contato</dt><dd>${esc(S.nome)} · ${esc(S.empresa)}<br>${esc(S.cel)}${S.email ? '<br>' + esc(S.email) : ''}</dd></dl></div>
+    ${multi() ? `<p class="hint">Serão abertas ${S.itens.length} SS, uma para cada equipamento.</p>` : ''}
+    <div class="cta"><button class="btn" id="enviarAt">Confirmar e enviar</button></div>`,
+
+  proc: () => `
+    <div class="proc">
+      <svg class="charge" viewBox="0 0 340 170" role="status" aria-label="Registrando ${multi() ? 'suas solicitações' : 'sua solicitação'}">
+<defs><g id="ffl"><path fill="#0C427E" d="M0 58V20Q0 0 20 0H80Q100 0 100 20V30H86V22Q86 14 78 14H22Q14 14 14 22V30H74V44H14V58Z"/><path fill="#E75723" transform="rotate(180 50 50)" d="M0 58V20Q0 0 20 0H80Q100 0 100 20V30H86V22Q86 14 78 14H22Q14 14 14 22V30H74V44H14V58Z"/></g>
+<clipPath id="cbody"><path d="M60 92 Q60 82 70 82 H120 Q128 82 128 90 V130 Q128 136 122 136 H66 Q60 136 60 130 Z"/></clipPath>
+<clipPath id="cchg"><rect x="262" y="86" width="40" height="54" rx="3"/></clipPath>
+<clipPath id="ccena"><rect x="0" y="0" width="340" height="170" rx="12"/></clipPath></defs>
+<g clip-path="url(#ccena)">
+<rect class="wl" x="0" y="0" width="340" height="140"/>
+<rect class="wb" x="0" y="128" width="340" height="12"/>
+<rect class="fl" x="0" y="140" width="340" height="30"/>
+<rect x="0" y="157" width="340" height="2.5" fill="#F2C200"/>
+<rect class="qd" x="270" y="30" width="24" height="32" rx="2.5"/><line class="qd" x1="274" y1="38" x2="290" y2="38"/><rect class="qd" x="279" y="44" width="6" height="9" rx="1.5"/>
+<ellipse class="sh" cx="70" cy="140" rx="68" ry="3.5"/><ellipse class="sh" cx="190" cy="140" rx="46" ry="3"/><ellipse class="sh" cx="282" cy="140" rx="24" ry="3"/>
+<rect x="6" y="131" width="62" height="6" rx="3" fill="#8A939C"/><circle cx="12" cy="136" r="4" fill="#E75723"/>
+<rect x="22" y="30" width="7" height="108" rx="2" fill="#3E444B"/><rect x="30" y="36" width="3.5" height="100" rx="1.5" fill="#545B63"/>
+<rect x="13" y="98" width="9" height="38" rx="2" fill="#2C3137"/><path d="M15 135.5 H1" stroke="#2C3137" stroke-width="4" stroke-linecap="round"/>
+<rect x="34" y="86" width="26" height="44" rx="3" fill="#1B1F24"/><rect x="37" y="90" width="20" height="36" rx="2" fill="#2B3037"/>
+<rect x="30" y="128" width="100" height="9" rx="3.5" fill="#A9B1B8"/>
+<path d="M60 92 Q60 82 70 82 H120 Q128 82 128 90 V130 Q128 136 122 136 H66 Q60 136 60 130 Z" fill="#F2C200"/>
+<polygon points="116,80 140,80 140,140 98,140" fill="#A9B1B8" clip-path="url(#cbody)"/>
+<rect x="60" y="82" width="68" height="3" rx="1.5" fill="#FFDA55" clip-path="url(#cbody)"/>
+<path d="M46 77 V42 Q46 30 58 30 H110 Q120 30 120 40 V77" fill="none" stroke="#A9B1B8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M58 30 H110" stroke="#8A939C" stroke-width="2" stroke-dasharray="5 4"/>
+<rect x="34" y="75" width="86" height="9" rx="4.5" fill="#262B31"/>
+<rect x="98" y="62" width="9" height="14" rx="3" fill="#262B31"/>
+<path d="M72 75 L68 64" stroke="#262B31" stroke-width="3" stroke-linecap="round"/><rect x="62" y="61" width="12" height="3" rx="1.5" fill="#262B31"/>
+<circle cx="111" cy="135" r="7.5" fill="#E75723"/><circle cx="111" cy="135" r="3.5" fill="#2C3137"/>
+<g transform="translate(64,88) scale(.13)"><use href="#ffl"/></g>
+${tagEmp('translate(64,121)')}
+<rect x="146" y="126" width="86" height="6" rx="2.5" fill="#545B63"/>
+<path d="M230 128 V102 Q230 98 234 98" fill="none" stroke="#545B63" stroke-width="3" stroke-linecap="round"/>
+<circle cx="155" cy="136" r="4" fill="#1E2227"/><circle cx="223" cy="136" r="4" fill="#1E2227"/>
+<rect x="152" y="76" width="72" height="50" rx="4" fill="#F07A1E"/>
+<rect x="152" y="76" width="72" height="4" rx="2" fill="#FF9B50"/>
+<rect x="154" y="70" width="68" height="8" rx="3.5" fill="#2C3137"/>
+<rect x="205" y="63" width="12" height="8" rx="2.5" fill="#1E2227"/>
+<rect x="158" y="84" width="16" height="21" rx="1.5" fill="#fff"/><path d="M161 89H171M161 93H171M161 97H168M161 101H171" stroke="#9AA3AD" stroke-width="1"/>
+${tagBat('translate(178,95)')}
+<rect x="205" y="82" width="13" height="40" rx="2.5" fill="#1B1F24"/>
+<rect class="cell k1" x="207.5" y="114" width="8" height="6" rx="1"/><rect class="cell k2" x="207.5" y="106.5" width="8" height="6" rx="1"/><rect class="cell k3" x="207.5" y="99" width="8" height="6" rx="1"/><rect class="cell k4" x="207.5" y="91.5" width="8" height="6" rx="1"/><rect class="cell k5" x="207.5" y="84" width="8" height="6" rx="1"/>
+<path class="cab" d="M211 64 C212 30 258 34 262 110"/><path class="flow" d="M262 110 C258 34 212 30 211 64"/>
+<rect x="262" y="86" width="40" height="54" rx="3" fill="#F2C200"/>
+<polygon points="262,108 262,140 290,140" fill="#A9B1B8" clip-path="url(#cchg)"/>
+<rect x="260" y="80" width="44" height="8" rx="3" fill="#30353C"/>
+<circle cx="268" cy="84" r="1.3" fill="#121518"/><circle cx="276" cy="84" r="1.3" fill="#121518"/><circle cx="284" cy="84" r="1.3" fill="#121518"/><circle cx="292" cy="84" r="1.3" fill="#121518"/>
+<rect x="277" y="94" width="21" height="12" rx="2" fill="#15191D"/><path class="bolt" d="M283 96 l-3 4.5 h2.5 l-1.5 4 l4.5 -5.5 h-2.5 l1.5 -3 z"/>
+<rect class="cell k1" x="288" y="98" width="1.6" height="4"/><rect class="cell k2" x="290.2" y="98" width="1.6" height="4"/><rect class="cell k3" x="292.4" y="98" width="1.6" height="4"/><rect class="cell k4" x="294.6" y="98" width="1.6" height="4"/><rect class="cell k5" x="296.8" y="98" width="1" height="4"/>
+${tagCar('translate(275,123)')}
+</g>
+      </svg>
+      <h2>Registrando ${multi() ? 'suas solicitações' : 'sua solicitação'}</h2>
+      <p class="lead">${multi() ? 'Cerca de 1 minuto por equipamento.' : 'Leva menos de 1 minuto.'} Fique nesta página.</p>
+      <ul class="checks" id="checks">
+        ${S.itens.map((it, i) => `<li id="ck${i}">${ROT[S.equips[i]]} · ${esc(identItem(it))}</li>`).join('')}
+      </ul>
+      <p class="hint" id="midst"></p>
+    </div>`,
+
+  fim: () => {
+    const okRes = RES.filter(r => r.numero_ss && (r.salva || r.repetida));
+    const quando = new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+    const cartoes = RES.map((r, i) => {
+      const it = S.itens[i], ok = r.numero_ss && (r.salva || r.repetida);
+      return `<div class="ticket"><div class="stripe"></div><div class="in" style="display:grid;gap:8px">
+        <div class="ssno"><small>${ROT[S.equips[i]]} · ${esc(identItem(it))}${r.repetida ? ' · já registrada' : ''}</small>
+          <span class="ssn">${ok ? esc(r.numero_ss) : 'Em confirmação'}</span></div>
+        ${ok ? `<div><button class="copy" data-n="${esc(r.numero_ss)}">Copiar número</button></div>` :
+               `<p class="thanks">Protocolo <strong style="font-family:var(--mono)">${esc(r.protocolo || '')}</strong>. Nossa equipe confirma o número da SS pelo WhatsApp informado.</p>`}
+        <dl><dt>Problema</dt><dd>${it.cat ? ROT[it.cat] + ' · ' : ''}equipamento parado: ${ROT[it.parado]}</dd><dt>Registrada em</dt><dd>${quando}</dd></dl>
+      </div></div>`;
+    }).join('');
+    let texto;
+    if (!multi()) {
+      const r = RES[0] || {};
+      texto = r.repetida ? `<h2>Sua solicitação já estava registrada</h2>
+        <p>${primeiro(S.nome)}, recebemos este mesmo pedido há pouco e ele já está com a nossa equipe de programação técnica (SS nº ${esc(r.numero_ss)}). Não é preciso enviar de novo.</p>`
+        : okRes.length ? `<h2>✔ SS (Solicitação de Serviço) nº ${esc(r.numero_ss)} registrada</h2>
+        <p>${primeiro(S.nome)}, sua solicitação já está com a nossa equipe de programação técnica. Assim que um técnico for designado, você recebe um aviso no WhatsApp com o nome do técnico e a previsão de atendimento.</p>`
+        : `<h2>Recebemos sua solicitação, ${primeiro(S.nome)}.</h2>
+        <p>Nossa equipe de programação técnica confirma o número da SS (Solicitação de Serviço) e entra em contato pelo WhatsApp informado.</p>`;
+    } else {
+      texto = `<h2>✔ ${okRes.length} de ${RES.length} SS (Solicitações de Serviço) registradas</h2>
+        <p>${primeiro(S.nome)}, suas solicitações já estão com a nossa equipe de programação técnica. Assim que um técnico for designado, você recebe um aviso no WhatsApp com o nome do técnico e a previsão de atendimento.</p>`;
+    }
+    return `${cartoes}${texto}
+      ${RES.some(r => !r.protocolo) ? `<p class="thanks" style="color:#B91C1C;font-weight:600">⚠ Não conseguimos registrar ${multi() ? 'todos os pedidos' : 'o pedido'} por falha de conexão. <a href="${linkWa(msgHumano(false))}" target="_blank" rel="noopener">Fale com a FF pelo WhatsApp</a> ou tente novamente.</p>` : ''}
+      ${r_falhas ? `<p class="thanks">⚠ ${r_falhas} foto(s)/vídeo não chegaram por falha de conexão. Se puder, <a href="${linkWa(msgHumano(true))}" target="_blank" rel="noopener">envie pelo WhatsApp da FF Logística</a> informando o número da SS.</p>` : ''}
+      <p class="thanks">A FF Logística agradece o contato.</p>
+      <div class="cta">
+        ${okRes.length ? `<div class="box" id="acomp" style="display:grid;gap:10px">
+          ${ACOMP === null ? `<p style="font-weight:600;margin:0">📍 Deseja acompanhar o trajeto do técnico até você?</p>
+            <p class="hint" style="margin:-6px 0 0">Quando o técnico sair para o atendimento, enviamos pelo WhatsApp o link do mapa com a chegada prevista.</p>
+            <div class="opts two"><button class="btn" style="font-size:16px" onclick="acompanhar(true)">Sim, quero acompanhar</button>
+            <button class="btn ghost" onclick="acompanhar(false)">Não, obrigado</button></div>`
+          : ACOMP ? `<p style="margin:0">✔ Combinado. Quando o técnico sair para o seu atendimento, você recebe pelo WhatsApp o link para acompanhar o trajeto.</p>
+            <a class="hint" href="acompanhar.html#${linkAcomp()}" target="_blank" rel="noopener" style="font-style:italic">(TESTE: ver a simulação do acompanhamento)</a>`
+          : `<p style="margin:0">Tudo bem. Você recebe os avisos principais pelo WhatsApp.</p>`}</div>` : ''}
+        <button class="btn ghost" onclick="reiniciar()">Fazer outra solicitação</button></div>`;
+  }
+};
+
+// ---------------------------------------------------------------- v24: falar com um atendente
+const FONE_FF = '5521981038612';            // preenchido pelo programa (abrir_ss_v24_TESTE.py)
+const FONE_FF_TXT = '(21) 98103-8612';
+const linkWa = t => 'https://wa.me/' + FONE_FF + '?text=' + encodeURIComponent(t);
+function resumoHumano(){
+  const tela = app.dataset.cur || '';
+  if (POR_ITEM.includes(tela)) { try { salvarItem(); } catch(e){} }
+  const eqs = S.equips.map((e, i) => {
+    const it = S.itens[i] || {};
+    const id = S.origem === 'LOC' ? (it.tag ? 'TAG ' + it.tag : '') : `${it.marca || ''} ${it.modelo || ''}`.trim();
+    return [ROT[e], id, it.relato ? '"' + it.relato + '"' : ''].filter(Boolean).join(' · ');
+  });
+  const ss = RES.filter(r => r.numero_ss).map(r => r.numero_ss);
+  return {tela, nome: S.nome, empresa: S.empresa, celular: S.cel,
+          fluxo: S.fluxo === 'or' ? 'Orçamento' : S.fluxo ? 'Atendimento técnico' : '',
+          origem: ROT[S.origem] || '', equipamentos: eqs, ss};
+}
+function msgHumano(midia){
+  const r = resumoHumano(), L = [];
+  L.push(midia ? 'Olá! Segue foto/vídeo da minha solicitação de manutenção.' : 'Olá! Gostaria de falar com um atendente.');
+  if (r.nome) L.push('Nome: ' + r.nome);
+  if (r.empresa) L.push('Empresa: ' + r.empresa);
+  if (r.fluxo) L.push('Assunto: ' + r.fluxo + (r.origem ? ' (' + r.origem + ')' : ''));
+  r.equipamentos.forEach(e => L.push('Equipamento: ' + e));
+  if (r.ss.length) L.push('SS nº ' + r.ss.join(', '));
+  return L.join('\n');
+}
+function abrirHumano(){
+  document.getElementById('shWa').href = linkWa(msgHumano(false));
+  document.getElementById('shTl').href = 'tel:+' + FONE_FF;
+  document.getElementById('shNum').textContent = FONE_FF_TXT;
+  document.getElementById('sheet').hidden = false;
+}
+function fecharHumano(){ document.getElementById('sheet').hidden = true; }
+function pedirHumano(canal){
+  try {
+    apiPost('humano', {dados: Object.assign({canal}, resumoHumano())}, {keepalive:true}).catch(() => {});
+  } catch(e){}
+  setTimeout(fecharHumano, 400);
+}
+
+let ACOMP = null;
+function linkAcomp(){   // SS reais deste atendimento para a simulação: EMP_M148_9986088_P~BAT_B012_9986089
+  return S.itens.map((it, i) => {
+    const r = RES[i] || {};
+    if (!r.numero_ss) return '';
+    const tag = String(it.tag || it.serie || '').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'semTAG';
+    return [S.equips[i], tag, r.numero_ss].concat(it.parado === 'SIM' ? ['P'] : []).join('_');
+  }).filter(Boolean).join('~');
+}   // v18: resposta à pergunta de acompanhamento (null = ainda não respondeu)
+function acompanhar(quer){
+  ACOMP = !!quer;
+  apiPost('acompanhar', {dados: {quer: ACOMP, protocolos: RES.map(r => r.protocolo).filter(Boolean)}}).catch(() => {});
+  render('fim');
+}
+async function identLoc(){
+  ler(['tag','serie']); S.tag = S.tag.toUpperCase(); S.serie = S.serie.toUpperCase();
+  if (!S.tag && !S.serie) {
+    if (eqAtual() === 'CRB') { S.cli_sis = ''; S.cli_conf = ''; go('parado'); return; }   // v17: carrinho sem TAG segue (SS no NI00)
+    document.getElementById('err').textContent = 'Informe a TAG (nº da frota FF) ou o nº de série.'; document.getElementById('tag').focus(); return; }
+  // v16: busca a empresa do equipamento no cadastro (Sismetro) e pede confirmação
+  const btn = document.querySelector('.cta .btn'); if (btn) { btn.disabled = true; btn.textContent = 'Localizando…'; }
+  let nome = '', existe = true;
+  try {
+    const r = await apiGet('tag', {tag: S.tag, serie: S.serie});
+    nome = (r && r.ok && r.cliente) ? r.cliente : '';
+    existe = !(r && r.existe === false);
+  } catch (e) { nome = ''; existe = true; }
+  S.cli_sis = nome; S.cli_conf = '';
+  // v21: TAG/série não encontrada no cadastro -> pede para o cliente conferir (pode corrigir ou seguir)
+  if (!existe && S.tagnf_ok !== (S.tag + '|' + S.serie)) { go('tagnf'); return; }
+  if (!nome) { go('parado'); return; }
+  // v19: a confirmação da empresa aparece só no 1º equipamento do atendimento
+  if (S.k > 0) {
+    const p = S.itens[0];
+    // v20: outra empresa no cadastro -> marca DIF para o ADM revisar (nunca aparece para o cliente)
+    S.cli_conf = (p && p.cli_conf === 'SIM' && p.cli_sis === nome) ? 'SIM' : (p && p.cli_sis && p.cli_sis !== nome ? 'DIF' : '');
+    go('parado'); return;
+  }
+  go('confemp');
+}
+function tagCorrigir(){ if (hist.length) { const h = hist.pop(); S.k = h.k; render(h.id); } else render('ident'); }
+function tagSeguir(){ S.tagnf_ok = S.tag + '|' + S.serie; identLoc(); }   // v21: segue -> SS no NI00 + alerta ao ADM
+// v22: empresa digitada -> confere no cadastro; sugestão (1, só se muito parecida); se insistir, alerta ao ADM
+async function dadosOk(btn){
+  if (!validar(precisaEmpresa() ? ['empresa','cel'] : ['cel'])) return;
+  ler(['email']);
+  S.emp_check = '';
+  if (!precisaEmpresa()) { go('revisao'); return; }
+  if (S.emp_ok_nome === S.empresa) { go('revisao'); return; }
+  btn.disabled = true; btn.textContent = 'Conferindo…';
+  let r = null;
+  try { r = await apiGet('empresa', {nome: S.empresa}); } catch (e) { r = null; }
+  btn.disabled = false; btn.textContent = 'Revisar';
+  if (!r || r.status === 'ok') { if (r && r.nome) S.empresa = r.nome; S.emp_check = 'OK'; S.emp_ok_nome = S.empresa; go('revisao'); return; }
+  if (r.status === 'sugestao') { S.emp_sug = r.sugestao; go('empsug'); return; }
+  go('empnf');
+}
+function empAceita(){ S.empresa = S.emp_sug; S.emp_check = 'OK'; S.emp_ok_nome = S.empresa; go('revisao'); }
+function empCorrigir(){ if (hist.length) { const h = hist.pop(); S.k = h.k; render(h.id); } else render('dados'); }
+function empSeguir(){ S.emp_check = 'NAOCAD'; S.emp_ok_nome = S.empresa; go('revisao'); }
+function confEmp(ok){
+  S.cli_conf = ok ? 'SIM' : 'NAO';
+  if (ok && !S.empresa) S.empresa = S.cli_sis;
+  go('parado');
+}
+function precisaEmpresa(){ const p = S.itens[0]; return !p || p.cli_conf !== 'SIM' || !S.empresa; }   // v19: decide pelo 1º equipamento
+// v26: nome próprio – 1ª letra maiúscula e demais minúsculas (Luis Lobo, Maria da Silva)
+function nomeProprio(t){
+  const MIN = ['da','de','do','das','dos','e','di','du'];
+  return String(t || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR').split(' ').map((p, i) =>
+    (i > 0 && MIN.includes(p)) ? p : p.split('-').map(q => q.charAt(0).toLocaleUpperCase('pt-BR') + q.slice(1)).join('-')).join(' ');
+}
+function saudacao(){ const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
+function reiniciar(){
+  try { sessionStorage.removeItem(CHAVE); localStorage.removeItem(CHAVE); } catch (e) {}
+  const keep = {nome: S.nome, empresa: S.empresa, cel: S.cel, email: S.email};
+  Object.assign(S, {fluxo:null, origem:'', equips:[], k:0, itens:[], necessidade:''}, itemVazio(), keep);
+  RES = []; _prot = null; ACOMP = null; hist.length = 0; app.dataset.cur = ''; render('ajuda');
+}
+
+const dormir = ms => new Promise(r => setTimeout(r, ms));
+async function esperarMidias(){
+  // reenvia o que falhou e espera até 3 min; o que não chegar segue como "não chegou" (a SS abre do mesmo jeito)
+  todasMidias().filter(m => m.status === 'erro').forEach(reenviar);
+  const st = document.getElementById('midst'), t0 = Date.now();
+  let pend = todasMidias().filter(m => m.status === 'enviando');
+  while (pend.length && Date.now() - t0 < 180000) {
+    const pct = Math.round(pend.reduce((a, m) => a + m.pct, 0) / pend.length);
+    if (st) st.textContent = `Enviando fotos e vídeo… ${pct}% (${pend.length} arquivo(s))`;
+    await dormir(500);
+    pend = todasMidias().filter(m => m.status === 'enviando');
+  }
+  if (st) st.textContent = '';
+}
+let r_falhas = 0;
+async function enviarItens(){
+  RES = []; r_falhas = 0;
+  await esperarMidias();
+  let online = false;
+  for (let i = 0; i < S.itens.length; i++) {
+    const it = S.itens[i], li = document.getElementById('ck' + i);
+    if (li) li.classList.add('ativo');
+    const fd = new Map();
+    const base = {nome:S.nome, empresa:(it.cli_conf === 'SIM' ? it.cli_sis : S.empresa), empresa_sis:it.cli_sis, empresa_conf:it.cli_conf, empresa_cad:(it.cli_conf === 'SIM' ? 'OK' : (S.emp_check || '')), cel:S.cel, email:S.email, origem:S.origem, equip:S.equips[i],
+                  tag:it.tag, marca:it.marca, modelo:it.modelo, serie:it.serie, tipo:'COR', parado:it.parado, cat:it.cat, relato:it.relato};
+    Object.entries(base).forEach(([k, v]) => fd.set(k, v || ''));
+    const vivas = it.midias.filter(m => !m.removida);
+    fd.set('midias', vivas.filter(m => m.status === 'ok').map(m => m.mid).join(','));
+    fd.set('midias_falha', String(vivas.filter(m => m.status !== 'ok').length));
+    r_falhas += vivas.filter(m => m.status !== 'ok').length;
+    let r = null;
+    for (let t = 0; t < 4 && !r; t++) {        // v25: o pedido precisa chegar na nuvem (tenta 4 vezes)
+      try { const j = await apiPost('atendimento', {dados: Object.fromEntries(fd)}); if (j.ok) r = j; }
+      catch (err) { await dormir(2500 * (t + 1)); }
+    }
+    if (!r) r = {protocolo:'', erro:'sem conexão'};
+    online = online || !!r.robo_online;
+    console.log('Pedido na nuvem – item ' + (i + 1) + ':', r);
+    RES.push({protocolo: r.protocolo || '', numero_ss: '', salva: false, repetida: false, erro: r.erro || ''});
+  }
+  // v25: o robô do PC abre as SS; espera o nº (até 3 min se o PC estiver ligado)
+  const ids = RES.map(r => r.protocolo).filter(Boolean), t0 = Date.now(), lim = online ? 180000 : 8000;
+  const st = document.getElementById('midst');
+  if (!ids.length) { RES.forEach(r => r.erro = r.erro || 'sem conexão'); }
+  while (ids.length && Date.now() - t0 < lim) {
+    try {
+      const j = await apiGet('status', {ids: ids.join(',')});
+      RES.forEach((r, i) => { const x = (j.resultados || {})[r.protocolo]; if (x && !r._ok) {
+        r._ok = true; Object.assign(r, {numero_ss: x.numero_ss || '', salva: !!x.salva, repetida: !!x.repetida});
+        const li = document.getElementById('ck' + i);
+        if (li) { li.classList.add('done'); li.textContent += r.numero_ss ? ' → SS ' + r.numero_ss : ' → protocolo ' + r.protocolo; } } });
+      if (RES.every(r => r._ok || !r.protocolo)) break;
+      if (!j.robo_online && Date.now() - t0 > 8000) break;
+    } catch (e) {}
+    if (st) st.textContent = 'Abrindo a SS no sistema…';
+    await dormir(3000);
+  }
+  RES.forEach((r, i) => { const li = document.getElementById('ck' + i);
+    if (li && !li.classList.contains('done')) { li.classList.add('done'); li.textContent += r.protocolo ? ' → protocolo ' + r.protocolo : ' → falha de conexão'; } });
+  if (st) st.textContent = '';
+  setTimeout(() => go('fim'), 900);
+}
+
+const AFTER = {
+  orc(){ mascaraCel(document.getElementById('cel'));
+    document.getElementById('enviarOrc').onclick = e => { if (validar(['empresa','cel','necessidade'])){ ler(['email']); e.target.disabled = true; e.target.textContent = 'Enviando…';
+      apiPost('orcamento', {dados: {nome:S.nome, empresa:S.empresa, cel:S.cel, email:S.email, necessidade:S.necessidade}})
+        .then(j => { if (!j.ok) throw new Error(j.erro); _prot = j.protocolo; go('fimorc'); })
+        .catch(() => { e.target.disabled = false; e.target.textContent = 'Enviar pedido'; document.getElementById('err').textContent = 'Não conseguimos enviar agora. Verifique sua conexão e tente novamente.'; });
+    } }; },
+  equip(){
+    document.getElementById('eqOk').onclick = () => {
+      if (!S.equips.length) { document.getElementById('err').textContent = 'Marque pelo menos um equipamento.'; return; }
+      S.itens = S.itens.slice(0, S.equips.length); S.k = 0; carregarItem(0);
+      if (QR_TAG && S.origem === 'LOC' && !S.tag && !(S.itens[0] && S.itens[0].tag)) S.tag = QR_TAG;   // v25: veio do QR Code
+      go('ident');
+    };
+  },
+  dados(){ mascaraCel(document.getElementById('cel')); },
+  relato(){
+    document.querySelectorAll('.fmid').forEach(inp => {
+      inp.addEventListener('click', () => { ler(['relato']); salvarEstado(); });   // v26: guarda tudo antes de abrir câmera/galeria
+      inp.onchange = async ev => {
+        ler(['relato']);
+        const lista = [...ev.target.files]; ev.target.value = '';
+        await escolherArquivos(lista);
+        salvarEstado();
+      };
+    });
+  },
+
+  revisao(){ document.getElementById('enviarAt').onclick = e => { e.target.disabled = true; e.target.textContent = 'Enviando…'; go('proc'); }; },
+  proc(){ enviarItens(); },
+  fim(){
+    document.querySelectorAll('.copy[data-n]').forEach(b => b.onclick = () => {
+      const n = b.dataset.n;
+      try { navigator.clipboard.writeText(n).then(() => b.textContent = 'Copiado ✓', () => b.textContent = n); }
+      catch { b.textContent = n; }
+    });
+  }
+};
+
+if (!restaurarEstado()) render('inicio');
+
+</script>
+
+</body>
+</html>
