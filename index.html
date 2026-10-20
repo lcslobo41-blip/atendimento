@@ -272,13 +272,14 @@ function go(id, push = true){
   if (id === '__cat') { if (eqAtual() === 'EMP') id = 'cat'; else { S.cat = ''; id = 'relato'; } }   // v17: só empilhadeira
   if (id === '__proxItem') {
     salvarItem();
+    if (S.editando) { S.editando = false; render('revisao'); return; }   // v31: correção feita na revisão -> volta para a revisão
     if (S.k < S.equips.length - 1) { if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k}); S.k++; carregarItem(S.k); render('ident'); return; }
     id = 'dados';
   }
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v30', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v31', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -307,12 +308,13 @@ function restaurarEstado(){
   } catch (e) { return false; }
 }
 function render(id){
+  if (id === 'revisao') S.editando = false;   // v31
   app.dataset.cur = id;
   bar.style.width = progresso(id) + '%';
   backBtn.hidden = ['inicio','proc','fim','fimorc'].includes(id);
   document.getElementById('limpar').hidden = ['inicio','proc'].includes(id);   // v28: botão Limpar
   document.getElementById('humano').hidden = id === 'proc';   // v24
-  app.innerHTML = '<section class="screen">' + TELAS[id]() + '</section>';
+  app.innerHTML = '<section class="screen">' + (S.editando && POR_ITEM.includes(id) ? `<p class="hint" style="background:#FFF4D6;border:1px solid #E7C66A;border-radius:10px;padding:8px 12px;color:#5A4300">✎ Corrigindo o ${multi() ? 'equipamento ' + (S.k + 1) : 'equipamento'}. Ao tocar em <b>Continuar</b> no relato, você volta para a revisão.</p>` : '') + TELAS[id]() + '</section>';
   const ts = document.getElementById('topStripe');   // v30: fita do topo verde (tudo aberto) / amarela (em confirmação)
   ts.className = 'stripe' + (id === 'fim' && RES.length ? (RES.every(ssOk) ? ' ok' : ' pend') : '');
   window.scrollTo({top:0});
@@ -674,8 +676,8 @@ const TELAS = {
       ${it.cat ? `<dt>Problema</dt><dd>${ROT[it.cat]}</dd>` : ''}
       <dt>Relato</dt><dd>${esc(it.relato)}</dd>
       <dt>Fotos / vídeo</dt><dd>${midiaTxt(it)}</dd>
-    </dl></div>`).join('')}
-    <div class="box"><dl><dt>Contato</dt><dd>${esc(S.nome)} · ${esc(S.empresa)}<br>${esc(S.cel)}${S.email ? '<br>' + esc(S.email) : ''}</dd></dl></div>
+    </dl><div style="text-align:right;margin-top:8px"><button class="copy" onclick="corrigirItem(${i})">✎ Corrigir ${multi() ? 'equipamento ' + (i + 1) : 'equipamento'}</button></div></div>`).join('')}
+    <div class="box"><dl><dt>Contato</dt><dd>${esc(S.nome)} · ${esc(S.empresa)}<br>${esc(S.cel)}${S.email ? '<br>' + esc(S.email) : ''}</dd></dl><div style="text-align:right;margin-top:8px"><button class="copy" onclick="corrigirContato()">✎ Corrigir contato</button></div></div>
     ${multi() ? `<p class="hint">Serão abertas ${S.itens.length} SS, uma para cada equipamento.</p>` : ''}
     <div class="cta"><button class="btn" id="enviarAt">Confirmar e enviar</button></div>`,
 
@@ -731,7 +733,7 @@ ${tagCar('translate(275,123)')}
 </g>
       </svg>
       <h2>Registrando ${multi() ? 'suas solicitações' : 'sua solicitação'}</h2>
-      <p class="lead">${multi() ? 'Cerca de 1 minuto por equipamento.' : 'Leva menos de 1 minuto.'} Fique nesta página.</p>
+      <p class="lead">Aguarde, estamos abrindo ${multi() ? 'as suas SS' : 'a sua SS'}.</p>
       <ul class="checks" id="checks">
         ${S.itens.map((it, i) => `<li id="ck${i}">${ROT[S.equips[i]]} · ${esc(identItem(it))}</li>`).join('')}
       </ul>
@@ -766,7 +768,7 @@ ${tagCar('translate(275,123)')}
     }
     return `${cartoes}${texto}
       ${RES.some(r => !r.protocolo) ? `<p class="thanks" style="color:#B91C1C;font-weight:600">⚠ Não conseguimos registrar ${multi() ? 'todos os pedidos' : 'o pedido'} por falha de conexão. <a href="${linkWa(msgHumano(false))}" target="_blank" rel="noopener">Fale com a FF pelo WhatsApp</a> ou tente novamente.</p>` : ''}
-      ${r_falhas ? `<p class="thanks">⚠ ${r_falhas} foto(s)/vídeo não chegaram por falha de conexão. Se puder, <a href="${linkWa(msgHumano(true))}" target="_blank" rel="noopener">envie pelo WhatsApp da FF Logística</a> informando o número da SS.</p>` : ''}
+      <div id="midfim">${midFimHtml()}</div>
       <p class="thanks">A FF Logística agradece o contato.</p>
       <div class="cta">
         ${okRes.length ? `<div class="box" id="acomp" style="display:grid;gap:10px">
@@ -831,6 +833,37 @@ function linkAcomp(){   // SS reais deste atendimento para a simulação: EMP_M1
     return [S.equips[i], tag, r.numero_ss].concat(it.parado === 'SIM' ? ['P'] : []).join('_');
   }).filter(Boolean).join('~');
 }   // v18: resposta à pergunta de acompanhamento (null = ainda não respondeu)
+// v31: fotos/vídeo terminam de subir na tela final, sem segurar a abertura da SS
+function midFimHtml(){
+  const ms = todasMidias(); if (!ms.length) return '';
+  const pend = ms.filter(m => m.status === 'enviando'), err = ms.filter(m => m.status === 'erro');
+  if (pend.length) {
+    const pct = Math.round(pend.reduce((a, m) => a + (m.pct || 0), 0) / pend.length);
+    return `<div class="box" style="background:#FFF4D6;border-color:#E7C66A"><p style="margin:0;font-weight:600">📤 Enviando fotos e vídeo… ${pct}% (${pend.length} arquivo(s))</p>
+      <p class="hint" style="margin:4px 0 0">Mantenha esta página aberta até terminar. A SS já foi enviada.</p></div>`;
+  }
+  if (err.length) return `<p class="thanks">⚠ ${err.length} foto(s)/vídeo não chegaram por falha de conexão. <a href="#" onclick="todasMidias().filter(m=>m.status==='erro').forEach(reenviar);acompanharMidias();return false">Tentar de novo</a> ou <a href="${linkWa(msgHumano(true))}" target="_blank" rel="noopener">envie pelo WhatsApp da FF Logística</a> informando o número da SS.</p>`;
+  return `<p class="thanks" style="color:var(--ok);font-weight:600">✔ Fotos e vídeo enviados.</p>`;
+}
+let _midTimer = null;
+function acompanharMidias(){
+  if (_midTimer) return;
+  _midTimer = setInterval(() => {
+    const el = document.getElementById('midfim');
+    if (!el) { clearInterval(_midTimer); _midTimer = null; return; }
+    el.innerHTML = midFimHtml();
+    if (!todasMidias().some(m => m.status === 'enviando')) { clearInterval(_midTimer); _midTimer = null; }
+  }, 1000);
+}
+window.addEventListener('beforeunload', e => {   // v31: avisa se fechar a página com arquivo ainda subindo
+  if (app.dataset.cur === 'fim' && todasMidias().some(m => m.status === 'enviando')) { e.preventDefault(); e.returnValue = ''; }
+});
+// v31: botões "Corrigir" na revisão – abre só o equipamento escolhido (ou o contato) e volta para a revisão
+function corrigirItem(i){
+  hist.push({id: 'revisao', k: S.k});
+  S.editando = true; S.k = i; carregarItem(i); render('ident');
+}
+function corrigirContato(){ hist.push({id: 'revisao', k: S.k}); S.editando = false; S.emp_ok_nome = ''; render('dados'); }
 function ssOk(r){ return !!(r.numero_ss && (r.salva || r.repetida)); }
 // v30: na tela final, continua conferindo as SS ainda em confirmação (a cada 5 s, até 15 min) e atualiza os cartões
 let _confTimer = null, _confIni = 0;
@@ -928,7 +961,7 @@ function nomeProprio(t){
 function saudacao(){ const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
 function limparTudo(){   // v28: apaga tudo e volta à 1ª tela
   try { sessionStorage.removeItem(CHAVE); } catch (e) {}
-  Object.assign(S, {fluxo:null, origem:'', equips:[], k:0, itens:[], empresa:'', nome:'', cel:'', email:'', necessidade:'', emp_check:'', emp_ok_nome:'', emp_sug:'', tagnf_ok:''}, itemVazio());
+  Object.assign(S, {fluxo:null, origem:'', equips:[], k:0, itens:[], empresa:'', nome:'', cel:'', email:'', necessidade:'', emp_check:'', emp_ok_nome:'', emp_sug:'', tagnf_ok:'', editando:false}, itemVazio());
   RES = []; _prot = null; ACOMP = null; hist.length = 0; app.dataset.cur = ''; RECARREGOU = false; render('inicio');
 }
 function reiniciar(){
@@ -955,7 +988,7 @@ async function esperarMidias(){
 let r_falhas = 0;
 async function enviarItens(){
   RES = []; r_falhas = 0;
-  await esperarMidias();
+  todasMidias().filter(m => m.status === 'erro').forEach(reenviar);   // v31: não espera as fotos/vídeo – elas continuam subindo
   let online = false;
   for (let i = 0; i < S.itens.length; i++) {
     const it = S.itens[i], li = document.getElementById('ck' + i);
@@ -965,9 +998,9 @@ async function enviarItens(){
                   tag:it.tag, marca:it.marca, modelo:it.modelo, serie:it.serie, tipo:'COR', parado:it.parado, cat:it.cat, relato:it.relato};
     Object.entries(base).forEach(([k, v]) => fd.set(k, v || ''));
     const vivas = it.midias.filter(m => !m.removida);
-    fd.set('midias', vivas.filter(m => m.status === 'ok').map(m => m.mid).join(','));
-    fd.set('midias_falha', String(vivas.filter(m => m.status !== 'ok').length));
-    r_falhas += vivas.filter(m => m.status !== 'ok').length;
+    fd.set('midias', vivas.filter(m => m.mid).map(m => m.mid).join(','));   // v31: todas, inclusive as que ainda estão subindo
+    fd.set('midias_falha', '0');
+    fd.set('midias_bg', vivas.some(m => m.status !== 'ok') ? '1' : '0');
     let r = null;
     for (let t = 0; t < 4 && !r; t++) {        // v25: o pedido precisa chegar na nuvem (tenta 4 vezes)
       try { const j = await apiPost('atendimento', {dados: Object.fromEntries(fd)}); if (j.ok) r = j; }
@@ -1033,6 +1066,7 @@ const AFTER = {
   proc(){ enviarItens(); },
   fim(){
     if (RES.some(r => r.protocolo && !ssOk(r))) conferirDepois();   // v30
+    acompanharMidias();   // v31
     document.querySelectorAll('.copy[data-n]').forEach(b => b.onclick = () => {
       const n = b.dataset.n;
       try { navigator.clipboard.writeText(n).then(() => b.textContent = 'Copiado ✓', () => b.textContent = n); }
