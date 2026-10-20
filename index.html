@@ -279,7 +279,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v31', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v32', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -759,12 +759,12 @@ ${tagCar('translate(275,123)')}
       texto = r.repetida ? `<h2>Sua solicitação já estava registrada</h2>
         <p>${primeiro(S.nome)}, recebemos este mesmo pedido há pouco e ele já está com a nossa equipe de programação técnica (SS nº ${esc(r.numero_ss)}). Não é preciso enviar de novo.</p>`
         : okRes.length ? `<h2>✔ SS (Solicitação de Serviço) nº ${esc(r.numero_ss)} registrada</h2>
-        <p>${primeiro(S.nome)}, sua solicitação já está com a nossa equipe de programação técnica. Assim que um técnico for designado, você recebe um aviso no WhatsApp com o nome do técnico e a previsão de atendimento.</p>`
+        <p>${primeiro(S.nome)}, ${saudacao().toLowerCase()}! Sua solicitação já está com a nossa equipe de programação. Assim que um técnico for designado, você receberá um aviso via WhatsApp com as informações sobre o atendimento.</p>`
         : `<h2>Recebemos sua solicitação, ${primeiro(S.nome)}.</h2>
         <p>Nossa equipe de programação técnica confirma o número da SS (Solicitação de Serviço) e entra em contato pelo WhatsApp informado.</p>`;
     } else {
       texto = `<h2>✔ ${okRes.length} de ${RES.length} SS (Solicitações de Serviço) registradas</h2>
-        <p>${primeiro(S.nome)}, suas solicitações já estão com a nossa equipe de programação técnica. Assim que um técnico for designado, você recebe um aviso no WhatsApp com o nome do técnico e a previsão de atendimento.</p>`;
+        <p>${primeiro(S.nome)}, ${saudacao().toLowerCase()}! Suas solicitações já estão com a nossa equipe de programação. Assim que um técnico for designado, você receberá um aviso via WhatsApp com as informações sobre o atendimento.</p>`;
     }
     return `${cartoes}${texto}
       ${RES.some(r => !r.protocolo) ? `<p class="thanks" style="color:#B91C1C;font-weight:600">⚠ Não conseguimos registrar ${multi() ? 'todos os pedidos' : 'o pedido'} por falha de conexão. <a href="${linkWa(msgHumano(false))}" target="_blank" rel="noopener">Fale com a FF pelo WhatsApp</a> ou tente novamente.</p>` : ''}
