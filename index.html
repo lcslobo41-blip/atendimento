@@ -37,6 +37,15 @@ body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding-inl
 .back{background:none;border:0;color:#fff;font:600 14px var(--body);cursor:pointer;padding:6px 0;opacity:.85}
 .back[hidden]{display:none}
 .stripe{height:10px;margin:12px -18px 0;background:repeating-linear-gradient(-45deg,var(--safety) 0 12px,var(--brand) 12px 24px)}
+.olabox{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.olabox svg{flex:0 0 92px;height:104px}
+.ola{font:700 22px var(--display);margin:0;line-height:1.2}
+.ola span{display:block;font:500 16px var(--body, inherit);color:var(--muted, #5B6670);margin-top:2px}
+.camp{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 16px;border:1px solid transparent}
+.camp svg{flex:0 0 28px;height:36px}
+.camp b{display:block;font-size:15px;margin-bottom:2px}
+.camp p{margin:0;font-size:14px;line-height:1.35}
+.camp .dica{margin-top:6px;font-weight:600}
 .stripe.ok{background:repeating-linear-gradient(-45deg,#2E9E5B 0 12px,#BFE8CD 12px 24px)}   /* v30: SS aberta */
 .stripe.pend{background:repeating-linear-gradient(-45deg,#F2B705 0 12px,#FFE79A 12px 24px)}   /* v30: em confirmação */
 .progress{height:4px;background:var(--line)}
@@ -279,7 +288,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v32', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v33', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -317,6 +326,7 @@ function render(id){
   app.innerHTML = '<section class="screen">' + (S.editando && POR_ITEM.includes(id) ? `<p class="hint" style="background:#FFF4D6;border:1px solid #E7C66A;border-radius:10px;padding:8px 12px;color:#5A4300">✎ Corrigindo o ${multi() ? 'equipamento ' + (S.k + 1) : 'equipamento'}. Ao tocar em <b>Continuar</b> no relato, você volta para a revisão.</p>` : '') + TELAS[id]() + '</section>';
   const ts = document.getElementById('topStripe');   // v30: fita do topo verde (tudo aberto) / amarela (em confirmação)
   ts.className = 'stripe' + (id === 'fim' && RES.length ? (RES.every(ssOk) ? ' ok' : ' pend') : '');
+  if (id === 'inicio') { const c = campanha(); ts.style.background = `repeating-linear-gradient(-45deg,${c.cor} 0 12px,${c.borda || c.claro} 12px 24px)`; } else ts.style.background = '';   // v33
   window.scrollTo({top:0});
   const f = app.querySelector('input:not([type=file]),textarea'); if (f && matchMedia('(pointer:fine)').matches) f.focus();
   if (AFTER[id]) AFTER[id]();
@@ -503,8 +513,9 @@ async function escolherArquivos(lista){
 
 // ---------------------------------------------------------------- telas
 const TELAS = {
-  inicio: () => `
-    <p class="step">${saudacao()}!</p>
+  inicio: () => { const c = campanha(); return `
+    <div class="olabox"><p class="ola">${saudacao()}! <span>Seja bem-vindo(a) à FF Logística.</span></p>${operador(c)}</div>
+    ${campanhaHtml(c)}
     <h1>Seu equipamento parou ou está apresentando problemas?</h1>
     <p class="lead">Nós cuidamos disso. Em poucos passos você registra a solicitação e já recebe o número da SS (Solicitação de Serviço).</p>
     <p style="font-weight:600">Como podemos chamar você?</p>
@@ -512,8 +523,8 @@ const TELAS = {
       ${campo('nome','Seu nome','text','autocomplete="name"')}
     </div>
     <p class="err" id="err"></p>
-    <div class="cta"><button class="btn" onclick="if(validar(['nome'])){S.nome=nomeProprio(S.nome);go('ajuda')}">Iniciar atendimento</button>
-    <p class="hint" style="text-align:center">Tenha à mão a TAG do equipamento (nº da frota FF). Se puder, encaminhe foto(s) e um vídeo de até 30 segundos para agilizarmos a manutenção.</p></div>`,
+    <div class="cta"><button class="btn" style="background:${c.cor};color:${c.tinta}${c.borda ? ';box-shadow:inset 0 0 0 2px ' + c.borda : ''}" onclick="if(validar(['nome'])){S.nome=nomeProprio(S.nome);go('ajuda')}">Iniciar atendimento</button>
+    <p class="hint" style="text-align:center">Tenha à mão a TAG do equipamento (nº da frota FF). Se puder, encaminhe foto(s) e um vídeo de até 30 segundos para agilizarmos a manutenção.</p></div>`; },
 
   ajuda: () => `
     <p class="step">${esc(S.empresa) || 'Atendimento FF Logística'}</p>
@@ -864,6 +875,52 @@ function corrigirItem(i){
   S.editando = true; S.k = i; carregarItem(i); render('ident');
 }
 function corrigirContato(){ hist.push({id: 'revisao', k: S.k}); S.editando = false; S.emp_ok_nome = ''; render('dados'); }
+// v33: campanhas de saúde do mês (faixa na tela inicial + fita do topo + botão) – teste: ?mes=1..12
+const CAMPANHAS = [
+  {nome:'Janeiro Branco', cor:'#FFFFFF', claro:'#F4F6F8', tinta:'#1B2A3A', borda:'#9AA5B1', msg:'Cuide da sua saúde mental. Converse, descanse e peça ajuda quando precisar.'},
+  {nome:'Fevereiro Roxo', cor:'#6B3FA0', claro:'#EFE7F8', tinta:'#FFFFFF', msg:'Conscientização sobre lúpus, fibromialgia e Alzheimer. Informação também é cuidado.'},
+  {nome:'Março Azul-marinho', cor:'#1F3A68', claro:'#E4EAF4', tinta:'#FFFFFF', msg:'Prevenção ao câncer colorretal. Converse com seu médico sobre os exames.'},
+  {nome:'Abril Verde', cor:'#2E8B57', claro:'#E3F3EA', tinta:'#FFFFFF', msg:'Segurança e saúde no trabalho.', dica:'Antes de operar, faça o checklist diário da empilhadeira.'},
+  {nome:'Maio Amarelo', cor:'#F2C200', claro:'#FFF6CC', tinta:'#1B2A3A', msg:'Atenção no trânsito, também dentro do armazém.', dica:'Respeite as faixas de pedestres e o limite de velocidade da empilhadeira.'},
+  {nome:'Junho Vermelho', cor:'#C62828', claro:'#FBE6E6', tinta:'#FFFFFF', msg:'Doe sangue. Um gesto simples que salva vidas.'},
+  {nome:'Julho Amarelo', cor:'#F2C200', claro:'#FFF6CC', tinta:'#1B2A3A', msg:'Prevenção às hepatites virais. Vacine-se e faça o teste.'},
+  {nome:'Agosto Dourado', cor:'#C9A227', claro:'#F8F0D8', tinta:'#1B2A3A', msg:'Incentivo ao aleitamento materno.'},
+  {nome:'Setembro Amarelo', cor:'#F2C200', claro:'#FFF6CC', tinta:'#1B2A3A', msg:'Valorização da vida. Precisa conversar? Ligue 188 (CVV) – 24 horas, gratuito.'},
+  {nome:'Outubro Rosa', cor:'#E85A9B', claro:'#FCE8F1', tinta:'#FFFFFF', msg:'Prevenção ao câncer de mama. Cuide-se e incentive quem você ama.'},
+  {nome:'Novembro Azul', cor:'#1E6FD9', claro:'#E3EEFC', tinta:'#FFFFFF', msg:'Saúde do homem e prevenção ao câncer de próstata. Faça seus exames.'},
+  {nome:'Dezembro Vermelho', cor:'#C62828', claro:'#FBE6E6', tinta:'#FFFFFF', msg:'Prevenção ao HIV/AIDS. Faça o teste e proteja-se.'}
+];
+function campanha(){
+  let m = new Date().getMonth();
+  try { const q = Number(new URLSearchParams(location.search).get('mes')); if (q >= 1 && q <= 12) m = q - 1; } catch (e) {}
+  return CAMPANHAS[m];
+}
+// v33: operador com capacete e colete na cor da campanha (desenho próprio)
+function operador(c){
+  const k = c.cor, b = c.borda || '#00000033', faixa = '#E9EEF2', faixa2 = '#C3CCD4';
+  return `<svg viewBox="0 0 92 104" role="img" aria-label="Operador com capacete e colete da campanha ${c.nome}">
+  <ellipse cx="46" cy="101" rx="34" ry="3" fill="#00000014"/>
+  <path d="M14 104 V82 Q14 64 34 60 H58 Q78 64 78 82 V104 Z" fill="#2C3E50"/>
+  <path d="M20 104 V80 Q20 66 34 63 L40 62 L46 76 L52 62 L58 63 Q72 66 72 80 V104 Z" fill="${k}" stroke="${b}" stroke-width="1"/>
+  <rect x="21" y="86" width="19" height="5" rx="1" fill="${faixa}" stroke="${faixa2}" stroke-width=".6"/>
+  <rect x="52" y="86" width="19" height="5" rx="1" fill="${faixa}" stroke="${faixa2}" stroke-width=".6"/>
+  <rect x="21" y="95" width="19" height="5" rx="1" fill="${faixa}" stroke="${faixa2}" stroke-width=".6"/>
+  <rect x="52" y="95" width="19" height="5" rx="1" fill="${faixa}" stroke="${faixa2}" stroke-width=".6"/>
+  <path d="M60 70 c-2 0-3.2 1.4-3.2 3.2 0 1.4 .9 2.8 1.8 4.1 l-3 6.5 2.2.4 2.2-4 2.2 4 2.2-.4-3-6.5 c.9-1.3 1.8-2.7 1.8-4.1 0-1.8-1.2-3.2-3.2-3.2z" fill="#FFFFFF" stroke="${b}" stroke-width=".6"/>
+  <rect x="40" y="52" width="12" height="10" rx="3" fill="#E0A97E"/>
+  <ellipse cx="46" cy="40" rx="15" ry="16" fill="#EDB98F"/>
+  <circle cx="40.5" cy="40" r="1.6" fill="#2C3E50"/><circle cx="51.5" cy="40" r="1.6" fill="#2C3E50"/>
+  <path d="M40 47 Q46 51 52 47" fill="none" stroke="#9A5B3C" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M27 33 Q27 13 46 13 Q65 13 65 33 Z" fill="${k}" stroke="${b}" stroke-width="1"/>
+  <rect x="23" y="31" width="46" height="5" rx="2.5" fill="${k}" stroke="${b}" stroke-width="1"/>
+  <rect x="43" y="12" width="6" height="21" rx="2" fill="#FFFFFF" opacity=".35"/>
+  <path d="M33 22 Q37 16 44 15" fill="none" stroke="#FFFFFF" stroke-width="2" opacity=".5" stroke-linecap="round"/>
+</svg>`;
+}
+function campanhaHtml(c){
+  const laco = `<svg viewBox="0 0 28 36" aria-hidden="true"><path d="M14 2c-4 0-7 3-7 7 0 3 2 6 4 9L4 33l5 1 5-9 5 9 5-1-7-15c2-3 4-6 4-9 0-4-3-7-7-7zm0 4c2 0 3 1.5 3 3.5 0 1.6-1.2 3.8-3 6.3-1.8-2.5-3-4.7-3-6.3C11 7.5 12 6 14 6z" fill="${c.cor}" stroke="${c.borda || c.cor}" stroke-width="1.2"/></svg>`;
+  return `<div class="camp" style="background:${c.claro};border-color:${c.borda || c.cor}">${laco}<div><b style="color:#1B2A3A">${c.nome}</b><p style="color:#1B2A3A">${c.msg}</p>${c.dica ? `<p class="dica" style="color:#1B2A3A">🦺 Dica: ${c.dica}</p>` : ''}</div></div>`;
+}
 function ssOk(r){ return !!(r.numero_ss && (r.salva || r.repetida)); }
 // v30: na tela final, continua conferindo as SS ainda em confirmação (a cada 5 s, até 15 min) e atualiza os cartões
 let _confTimer = null, _confIni = 0;
