@@ -176,6 +176,7 @@ dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
     <div class="stripe"></div>
   </header>
   <div class="progress"><i id="bar"></i></div>
+  <div id="inapp" hidden style="background:#FFF4D6;color:#5A4300;padding:10px 14px;font-size:14px;line-height:1.35;border-bottom:1px solid #E7C66A">Você abriu pelo WhatsApp. Para enviar fotos e vídeo sem falhas, <a id="inappLink" href="#" style="color:#1B2A3A;font-weight:700">abra no Chrome</a>.</div>
   <main id="app"></main>
   <div class="humano" id="humano"><button type="button" onclick="abrirHumano()">Prefere falar com um atendente?</button></div>
 </div>
@@ -274,7 +275,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v26', VALIDADE = 2 * 60 * 60 * 1000;
+const CHAVE = 'ff_atend_v27', VALIDADE = 2 * 60 * 60 * 1000;
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -577,14 +578,13 @@ const TELAS = {
       <p class="hint" style="margin:0 0 8px">Opcional, mas ajuda muito o técnico: até 4 fotos e 1 vídeo de até 30 segundos.</p>
       <div class="mbtns">
         <label class="mb" for="fCam">📷<span>Tirar foto</span></label>
-        <label class="mb" for="fVid">🎥<span>Gravar vídeo</span></label>
-        <label class="mb" for="fGal">🖼️<span>Fotos da galeria</span></label>
-        <label class="mb" for="fGalV">🎞️<span>Vídeo da galeria</span></label>
+        <label class="mb" for="fGal">🖼️<span>Foto da galeria</span></label>
+        <label class="mb" for="fVid" style="grid-column:1/-1">🎥<span>Vídeo (gravar ou escolher)</span></label>
       </div>
+      <p class="hint" style="margin-top:6px">Se a câmera não abrir, tire a foto ou grave o vídeo pela câmera do celular e depois escolha da galeria.</p>
       <input id="fCam" class="fmid" type="file" accept="image/*" capture="environment" hidden>
-      <input id="fVid" class="fmid" type="file" accept="video/*" capture="environment" hidden>
-      <input id="fGal" class="fmid" type="file" accept="image/*" multiple hidden>
-      <input id="fGalV" class="fmid" type="file" accept="video/*" hidden>
+      <input id="fGal" class="fmid" type="file" accept="image/*" hidden>
+      <input id="fVid" class="fmid" type="file" accept="video/*" hidden>
       ${RECARREGOU ? '<p class="hint" style="color:#B45309;margin-top:8px">O celular recarregou a página ao abrir a câmera. Seus dados foram mantidos. Se a foto não aparecer abaixo, tire a foto pela câmera do celular e use <b>Fotos da galeria</b>.</p>' : ''}
       </div>
       <p class="err" id="errmid"></p>
@@ -997,6 +997,12 @@ const AFTER = {
   }
 };
 
+(function(){ const ua = navigator.userAgent || '';
+  if (/WhatsApp|FBAN|FBAV|Instagram|; wv\)/i.test(ua) && /Android/i.test(ua)) {
+    const u = location.href.replace(/^https?:\/\//, '');
+    document.getElementById('inappLink').href = 'intent://' + u + '#Intent;scheme=https;package=com.android.chrome;end';
+    document.getElementById('inapp').hidden = false;
+  } })();
 if (!restaurarEstado()) render('inicio');
 
 </script>
