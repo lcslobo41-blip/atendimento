@@ -276,7 +276,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v28', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v29', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -582,13 +582,13 @@ const TELAS = {
       <div class="mbtns">
         <label class="mb" for="fCam">📷<span>Tirar foto</span></label>
         <label class="mb" for="fGal">🖼️<span>Foto da galeria</span></label>
-        <label class="mb" for="fVid" style="grid-column:1/-1">🎥<span>Vídeo (gravar ou escolher)</span></label>
+        <label class="mb" for="fVid" style="grid-column:1/-1">🎥<span>Vídeo da galeria</span></label>
       </div>
-      <p class="hint" style="margin-top:6px">Se a câmera não abrir, tire a foto ou grave o vídeo pela câmera do celular e depois escolha da galeria.</p>
+      <p class="hint" style="margin-top:6px">Para enviar vídeo: grave pela câmera do próprio celular (até 30 segundos) e depois toque em <b>Vídeo da galeria</b>. Se a câmera não abrir para foto, faça o mesmo com <b>Foto da galeria</b>.</p>
       <input id="fCam" class="fmid" type="file" accept="image/*" capture="environment" hidden>
       <input id="fGal" class="fmid" type="file" accept="image/*" hidden>
       <input id="fVid" class="fmid" type="file" accept="video/*" hidden>
-      ${RECARREGOU ? '<p class="hint" style="color:#B45309;margin-top:8px">O celular recarregou a página ao abrir a câmera. Seus dados foram mantidos. Se a foto não aparecer abaixo, tire a foto pela câmera do celular e use <b>Fotos da galeria</b>.</p>' : ''}
+      ${RECARREGOU ? '<p class="hint" style="color:#B45309;margin-top:8px">O celular recarregou a página ao abrir a câmera. Seus dados foram mantidos. Se a foto não aparecer abaixo, tire a foto pela câmera do celular e use <b>Foto da galeria</b>.</p>' : ''}
       </div>
       <p class="err" id="errmid"></p>
       <div class="thumbs" id="thumbs">${thumbsHtml(S)}</div>
