@@ -172,6 +172,7 @@ dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
     <div class="row">
       <button class="back" id="back" hidden>‹ Voltar</button>
       <div class="logo">FF <span>LOGÍSTICA</span></div>
+      <button class="back" id="limpar" hidden onclick="limparTudo()" style="margin-left:auto;margin-right:12px">↺ Limpar</button>
     </div>
     <div class="stripe"></div>
   </header>
@@ -275,24 +276,25 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v27', VALIDADE = 2 * 60 * 60 * 1000;
+const CHAVE = 'ff_atend_v28', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
   try {
     const cur = app.dataset.cur || '';
-    if (['inicio','proc','fim','fimorc'].includes(cur)) { sessionStorage.removeItem(CHAVE); localStorage.removeItem(CHAVE); return; }
+    if (['inicio','proc','fim','fimorc'].includes(cur)) { sessionStorage.removeItem(CHAVE); return; }
     if (POR_ITEM.includes(cur)) salvarItem();
     const copia = JSON.parse(JSON.stringify(Object.assign({}, S, {midias: []}), (k, v) => (k === 'midias' ? [] : v)));
     copia.midias = S.midias.filter(m => m.status === 'ok' && !m.removida).map(midiaLeve);
     copia.itens = S.itens.map(it => it ? Object.assign({}, it, {midias: (it.midias || []).filter(m => m.status === 'ok' && !m.removida).map(midiaLeve)}) : it);
     const dados = JSON.stringify({t: Date.now(), cur, k: S.k, S: copia, hist, lid: _lid});
-    sessionStorage.setItem(CHAVE, dados); localStorage.setItem(CHAVE, dados);
+    sessionStorage.setItem(CHAVE, dados);
   } catch (e) {}
 }
 function restaurarEstado(){
   try {
-    const txt = sessionStorage.getItem(CHAVE) || localStorage.getItem(CHAVE);
+    try { localStorage.removeItem('ff_atend_v26'); localStorage.removeItem('ff_atend_v27'); } catch (e) {}
+    const txt = sessionStorage.getItem(CHAVE);
     if (!txt) return false;
     const d = JSON.parse(txt);
     if (!d || Date.now() - d.t > VALIDADE || !d.cur || !TELAS[d.cur]) return false;
@@ -306,6 +308,7 @@ function render(id){
   app.dataset.cur = id;
   bar.style.width = progresso(id) + '%';
   backBtn.hidden = ['inicio','proc','fim','fimorc'].includes(id);
+  document.getElementById('limpar').hidden = ['inicio','proc'].includes(id);   // v28: botão Limpar
   document.getElementById('humano').hidden = id === 'proc';   // v24
   app.innerHTML = '<section class="screen">' + TELAS[id]() + '</section>';
   window.scrollTo({top:0});
@@ -888,8 +891,13 @@ function nomeProprio(t){
     (i > 0 && MIN.includes(p)) ? p : p.split('-').map(q => q.charAt(0).toLocaleUpperCase('pt-BR') + q.slice(1)).join('-')).join(' ');
 }
 function saudacao(){ const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
+function limparTudo(){   // v28: apaga tudo e volta à 1ª tela
+  try { sessionStorage.removeItem(CHAVE); } catch (e) {}
+  Object.assign(S, {fluxo:null, origem:'', equips:[], k:0, itens:[], empresa:'', nome:'', cel:'', email:'', necessidade:'', emp_check:'', emp_ok_nome:'', emp_sug:'', tagnf_ok:''}, itemVazio());
+  RES = []; _prot = null; ACOMP = null; hist.length = 0; app.dataset.cur = ''; RECARREGOU = false; render('inicio');
+}
 function reiniciar(){
-  try { sessionStorage.removeItem(CHAVE); localStorage.removeItem(CHAVE); } catch (e) {}
+  try { sessionStorage.removeItem(CHAVE); } catch (e) {}
   const keep = {nome: S.nome, empresa: S.empresa, cel: S.cel, email: S.email};
   Object.assign(S, {fluxo:null, origem:'', equips:[], k:0, itens:[], necessidade:''}, itemVazio(), keep);
   RES = []; _prot = null; ACOMP = null; hist.length = 0; app.dataset.cur = ''; render('ajuda');
