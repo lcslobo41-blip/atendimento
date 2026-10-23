@@ -202,6 +202,15 @@ dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
     <button class="bth vt" type="button" onclick="fecharHumano()">Voltar ao formulário</button>
   </div>
 </div>
+<div class="sheet" id="volta" hidden>
+  <div class="pn" role="dialog" aria-modal="true" aria-labelledby="vlT" id="vlPn">
+    <h3 id="vlT">Conseguiu falar com o atendente?</h3>
+    <p class="lead">O que você já preencheu continua guardado.</p>
+    <button class="bth tl" type="button" onclick="voltaLig('sim')">✔ Sim, falei com o atendente</button>
+    <button class="bth vt" type="button" onclick="voltaLig('nao')">✖ Não atenderam – continuar meu chamado</button>
+    <button class="bth vt" type="button" onclick="voltaLig('retorno')">📞 Peça para me ligarem</button>
+  </div>
+</div>
 
 <script>
 const ICON = {
@@ -288,7 +297,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v33', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v34', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -828,7 +837,46 @@ function abrirHumano(){
   document.getElementById('sheet').hidden = false;
 }
 function fecharHumano(){ document.getElementById('sheet').hidden = true; }
+// v34: na volta da ligação, pergunta se falou com o atendente (a página não enxerga a chamada)
+const LIG_KEY = 'ff_ligou';
+function marcarLigacao(){ try { sessionStorage.setItem(LIG_KEY, String(Date.now())); } catch (e) {} }
+function checarVoltaLigacao(){
+  let t = 0; try { t = Number(sessionStorage.getItem(LIG_KEY) || 0); } catch (e) {}
+  if (!t || document.visibilityState !== 'visible') return;
+  if (Date.now() - t < 3000) return;                       // ainda abrindo o discador
+  try { sessionStorage.removeItem(LIG_KEY); } catch (e) {}
+  if (Date.now() - t > 2 * 60 * 60 * 1000) return;         // ligação muito antiga: ignora
+  document.getElementById('volta').hidden = false;
+}
+document.addEventListener('visibilitychange', checarVoltaLigacao);
+window.addEventListener('focus', checarVoltaLigacao);
+function voltaLig(r){
+  const pn = document.getElementById('vlPn'), fechar = () => { document.getElementById('volta').hidden = true; };
+  if (r === 'nao') { fechar(); return; }
+  if (r === 'sim') {
+    try { apiPost('humano', {dados: Object.assign(resumoHumano(), {canal: 'Ligação atendida'})}, {keepalive: true}).catch(() => {}); } catch (e) {}
+    pn.innerHTML = `<h3>Ótimo!</h3><p class="lead">O atendente vai concluir a sua solicitação com você. Se ele pedir, o que você preencheu aqui continua guardado.</p>
+      <button class="bth vt" type="button" onclick="document.getElementById('volta').hidden=true">Fechar</button>`;
+    return;
+  }
+  // retorno de ligação: confirma o telefone
+  const cel = S.cel || '';
+  pn.innerHTML = `<h3>Vamos ligar para você</h3><p class="lead">Confirme o número para retorno:</p>
+    <input id="vlCel" type="tel" inputmode="tel" value="${esc(cel)}" placeholder="(21) 99999-9999" style="font-size:18px;padding:12px;border-radius:10px;border:1.5px solid var(--line)">
+    <p class="err" id="vlErr"></p>
+    <button class="bth tl" type="button" onclick="enviarRetorno()">Pedir retorno</button>
+    <button class="bth vt" type="button" onclick="document.getElementById('volta').hidden=true">Cancelar</button>`;
+}
+function enviarRetorno(){
+  const v = (document.getElementById('vlCel').value || '').trim();
+  if (v.replace(/\D/g, '').length < 10) { document.getElementById('vlErr').textContent = 'Informe o celular com DDD.'; return; }
+  if (!S.cel) S.cel = v;
+  try { apiPost('humano', {dados: Object.assign(resumoHumano(), {canal: 'Retorno de ligação', celular: v})}, {keepalive: true}).catch(() => {}); } catch (e) {}
+  document.getElementById('vlPn').innerHTML = `<h3>✔ Pedido enviado</h3><p class="lead">Nossa equipe vai ligar para ${esc(v)} assim que possível. Se preferir, continue o seu chamado por aqui: o que você preencheu está guardado.</p>
+    <button class="bth tl" type="button" onclick="document.getElementById('volta').hidden=true">Continuar meu chamado</button>`;
+}
 function pedirHumano(canal){
+  if (canal === 'Ligação') marcarLigacao();   // v34
   try {
     apiPost('humano', {dados: Object.assign({canal}, resumoHumano())}, {keepalive:true}).catch(() => {});
   } catch(e){}
@@ -1132,6 +1180,7 @@ const AFTER = {
   }
 };
 
+setTimeout(checarVoltaLigacao, 1500);   // v34: aba recarregada na volta da ligação
 (function(){ const ua = navigator.userAgent || '';
   if (/WhatsApp|FBAN|FBAV|Instagram|; wv\)/i.test(ua) && /Android/i.test(ua)) {
     const u = location.href.replace(/^https?:\/\//, '');
