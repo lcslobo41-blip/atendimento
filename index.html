@@ -177,7 +177,7 @@ dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
 
 </head>
 <body>
-<p class="proto">AMBIENTE DE TESTE · a SS é salva com "TESTE - DESCONSIDERAR"</p>
+<p class="proto">AMBIENTE DE TESTE · v36 · a SS é aberta no sistema novo (nº 200.000.000), sem Sismetro</p>
 <div class="device">
   <header class="top">
     <div class="row">
@@ -242,7 +242,7 @@ async function apiPost(acao, obj, extra){
 }
 
 // ---------------------------------------------------------------- estado
-const CAMPOS_ITEM = ['tag','marca','modelo','serie','parado','cat','relato','midias','cli_sis','cli_conf'];
+const CAMPOS_ITEM = ['tag','marca','modelo','serie','parado','cat','relato','midias','cli_sis','cli_conf','tag_nf'];
 const S = {fluxo:null, origem:'', equips:[], k:0, itens:[], empresa:'', nome:'', cel:'', email:'', necessidade:'',
            tag:'', marca:'', modelo:'', serie:'', parado:'', cat:'', relato:'', midias:[], cli_sis:'', cli_conf:''};
 const hist = [];
@@ -256,7 +256,7 @@ const ROT = {LOC:'Locação FF Logística', PROP:'Equipamento próprio', EMP:'Em
 const EX_TAG = {EMP:'M148', BAT:'B33', CAR:'C06', CRB:'CB01'};
 const DA = {EMP:'da empilhadeira', BAT:'da bateria', CAR:'do carregador', CRB:'do carrinho de baterias'};
 
-function itemVazio(){ return {tag:'', marca:'', modelo:'', serie:'', parado:'', cat:'', relato:'', midias:[], cli_sis:'', cli_conf:''}; }
+function itemVazio(){ return {tag:'', marca:'', modelo:'', serie:'', parado:'', cat:'', relato:'', midias:[], cli_sis:'', cli_conf:'', tag_nf:''}; }
 function salvarItem(){ const it = {}; CAMPOS_ITEM.forEach(c => it[c] = S[c]); S.itens[S.k] = it; }
 function carregarItem(k){ const it = S.itens[k] || itemVazio(); CAMPOS_ITEM.forEach(c => S[c] = Array.isArray(it[c]) ? [...it[c]] : it[c]); }
 const eqAtual = () => S.equips[S.k];
@@ -297,7 +297,7 @@ function go(id, push = true){
   if (push && app.dataset.cur) hist.push({id: app.dataset.cur, k: S.k});
   render(id);
 }
-const CHAVE = 'ff_atend_v34', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
+const CHAVE = 'ff_atend_v36', VALIDADE = 20 * 60 * 1000;   // v28: só a mesma aba, até 20 min (recarga da câmera)
 let RECARREGOU = false;
 function midiaLeve(m){ return {lid:m.lid, tipo:m.tipo, nome:m.nome, seg:m.seg, status:'ok', pct:100, tent:0, mid:m.mid}; }
 function salvarEstado(){
@@ -791,14 +791,7 @@ ${tagCar('translate(275,123)')}
       <div id="midfim">${midFimHtml()}</div>
       <p class="thanks">A FF Logística agradece o contato.</p>
       <div class="cta">
-        ${okRes.length ? `<div class="box" id="acomp" style="display:grid;gap:10px">
-          ${ACOMP === null ? `<p style="font-weight:600;margin:0">📍 Deseja acompanhar o trajeto do técnico até você?</p>
-            <p class="hint" style="margin:-6px 0 0">Quando o técnico sair para o atendimento, enviamos pelo WhatsApp o link do mapa com a chegada prevista.</p>
-            <div class="opts two"><button class="btn" style="font-size:16px" onclick="acompanhar(true)">Sim, quero acompanhar</button>
-            <button class="btn ghost" onclick="acompanhar(false)">Não, obrigado</button></div>`
-          : ACOMP ? `<p style="margin:0">✔ Combinado. Quando o técnico sair para o seu atendimento, você recebe pelo WhatsApp o link para acompanhar o trajeto.</p>
-            <a class="hint" href="acompanhar.html#${linkAcomp()}" target="_blank" rel="noopener" style="font-style:italic">(TESTE: ver a simulação do acompanhamento)</a>`
-          : `<p style="margin:0">Tudo bem. Você recebe os avisos principais pelo WhatsApp.</p>`}</div>` : ''}
+        ${okRes.length ? `<a class="btn ghost" href="${linkAcompanhar()}" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Acompanhar o atendimento</a>` : ''}
         <button class="btn ghost" onclick="reiniciar()">Fazer outra solicitação</button></div>`;
   }
 };
@@ -989,15 +982,12 @@ function conferirDepois(){
     if (mudou) { const y = window.scrollY; render('fim'); window.scrollTo({top: y}); } else conferirDepois();
   }, 5000);
 }
-function acompanhar(quer){
-  ACOMP = !!quer;
-  apiPost('acompanhar', {dados: {quer: ACOMP, protocolos: RES.map(r => r.protocolo).filter(Boolean)}}).catch(() => {});
-  render('fim');
-}
+function acompanhar(quer){ ACOMP = !!quer; render('fim'); }   // v35: resposta fica só na tela (sem a nuvem antiga)
+function linkAcompanhar(){ return 'acompanhar_v3_TESTE.html?c=' + RES.map(r => r.codigo).filter(Boolean).join(','); }
 async function identLoc(){
   ler(['tag','serie']); S.tag = S.tag.toUpperCase(); S.serie = S.serie.toUpperCase();
   if (!S.tag && !S.serie) {
-    if (eqAtual() === 'CRB') { S.cli_sis = ''; S.cli_conf = ''; go('parado'); return; }   // v17: carrinho sem TAG segue (SS no NI00)
+    if (eqAtual() === 'CRB') { S.cli_sis = ''; S.cli_conf = ''; S.tag_nf = ''; go('parado'); return; }   // v17: carrinho sem TAG segue (SS no NI00)
     document.getElementById('err').textContent = 'Informe a TAG (nº da frota FF) ou o nº de série.'; document.getElementById('tag').focus(); return; }
   // v16: busca a empresa do equipamento no cadastro (Sismetro) e pede confirmação
   const btn = document.querySelector('.cta .btn'); if (btn) { btn.disabled = true; btn.textContent = 'Localizando…'; }
@@ -1007,7 +997,7 @@ async function identLoc(){
     nome = (r && r.ok && r.cliente) ? r.cliente : '';
     existe = !(r && r.existe === false);
   } catch (e) { nome = ''; existe = true; }
-  S.cli_sis = nome; S.cli_conf = '';
+  S.cli_sis = nome; S.cli_conf = ''; S.tag_nf = existe ? '' : 'SIM';   // v35: TAG não encontrada (cliente seguiu) -> alerta no Painel ADM
   // v21: TAG/série não encontrada no cadastro -> pede para o cliente conferir (pode corrigir ou seguir)
   if (!existe && S.tagnf_ok !== (S.tag + '|' + S.serie)) { go('tagnf'); return; }
   if (!nome) { go('parado'); return; }
@@ -1091,51 +1081,53 @@ async function esperarMidias(){
   if (st) st.textContent = '';
 }
 let r_falhas = 0;
+// v35: a SS é aberta direto no sistema novo (Firebase), com numeração própria a partir de 200.000.000 – sem robô e sem Sismetro
+const fmtSS = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+function alertasItem(it, empresa){
+  const a = [];
+  if (S.origem === 'LOC') {
+    if (it.tag_nf === 'SIM') a.push(`${it.tag ? 'TAG ' + it.tag : 'Nº de série ' + it.serie} informada pelo cliente não encontrada no cadastro – conferir`);
+    if (!it.tag && !it.serie) a.push('Equipamento sem TAG/nº de série – conferir');
+    if (it.cli_conf === 'NAO') a.push(`Empresa do cadastro (${it.cli_sis}) NÃO confirmada pelo cliente; informou: ${S.empresa || '-'}`);
+    if (it.cli_conf === 'DIF') a.push(`Equipamento cadastrado para OUTRA empresa: ${it.cli_sis}`);
+  }
+  if (S.emp_check === 'NAOCAD' && it.cli_conf !== 'SIM') a.push(`Empresa não localizada no cadastro: ${empresa}`);
+  return a;
+}
+async function esperarFirebase(){ for (let t = 0; t < 40 && !window.FB_criarSS; t++) await dormir(250); return !!window.FB_criarSS; }
 async function enviarItens(){
   RES = []; r_falhas = 0;
-  todasMidias().filter(m => m.status === 'erro').forEach(reenviar);   // v31: não espera as fotos/vídeo – elas continuam subindo
-  let online = false;
+  todasMidias().filter(m => m.status === 'erro').forEach(reenviar);   // as fotos/vídeo continuam subindo em segundo plano
+  const pronto = await esperarFirebase();
+  const pedido = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);   // agrupa as SS deste envio
   for (let i = 0; i < S.itens.length; i++) {
     const it = S.itens[i], li = document.getElementById('ck' + i);
     if (li) li.classList.add('ativo');
-    const fd = new Map();
-    const base = {nome:S.nome, empresa:(it.cli_conf === 'SIM' ? it.cli_sis : S.empresa), empresa_sis:it.cli_sis, empresa_conf:it.cli_conf, empresa_cad:(it.cli_conf === 'SIM' ? 'OK' : (S.emp_check || '')), cel:S.cel, email:S.email, origem:S.origem, equip:S.equips[i],
-                  tag:it.tag, marca:it.marca, modelo:it.modelo, serie:it.serie, tipo:'COR', parado:it.parado, cat:it.cat, relato:it.relato};
-    Object.entries(base).forEach(([k, v]) => fd.set(k, v || ''));
+    const empresa = it.cli_conf === 'SIM' ? it.cli_sis : S.empresa;
     const vivas = it.midias.filter(m => !m.removida);
-    fd.set('midias', vivas.filter(m => m.mid).map(m => m.mid).join(','));   // v31: todas, inclusive as que ainda estão subindo
-    fd.set('midias_falha', '0');
-    fd.set('midias_bg', vivas.some(m => m.status !== 'ok') ? '1' : '0');
+    const dados = {
+      teste: true, pedido,
+      cliente: empresa || '', contato_nome: S.nome, contato_celular: S.cel, contato_email: S.email || '',
+      origem: ROT[S.origem] || '', equipamento: ROT[S.equips[i]] || '',
+      tag: S.origem === 'LOC' ? (it.tag || '') : '', serie: it.serie || '',
+      marca: S.origem === 'PROP' ? (it.marca || '') : '', modelo: S.origem === 'PROP' ? (it.modelo || '') : '',
+      empresa_cadastro: it.cli_sis || '', empresa_confirmada: it.cli_conf || '',
+      parado: it.parado === 'SIM', categoria: it.cat ? ROT[it.cat] : '', tipo: 'Corretiva',
+      descricao: it.relato || '', midia: vivas.length ? midiaTxt(it).replace(/ · .*$/, '') : '',
+      midias_ids: vivas.filter(m => m.mid).map(m => m.mid), alertas: alertasItem(it, empresa)
+    };
     let r = null;
-    for (let t = 0; t < 4 && !r; t++) {        // v25: o pedido precisa chegar na nuvem (tenta 4 vezes)
-      try { const j = await apiPost('atendimento', {dados: Object.fromEntries(fd)}); if (j.ok) r = j; }
-      catch (err) { await dormir(2500 * (t + 1)); }
+    for (let t = 0; t < 3 && pronto && !r; t++) {
+      try { r = await window.FB_criarSS(dados); } catch (err) { console.log('Firebase', err); await dormir(2000 * (t + 1)); }
     }
-    if (!r) r = {protocolo:'', erro:'sem conexão'};
-    online = online || !!r.robo_online;
-    console.log('Pedido na nuvem – item ' + (i + 1) + ':', r);
-    RES.push({protocolo: r.protocolo || '', numero_ss: '', salva: false, repetida: false, erro: r.erro || ''});
+    if (r) {
+      RES.push({protocolo: String(r.numero), numero_ss: fmtSS(r.numero), codigo: r.codigo, salva: true, repetida: false, _ok: true});
+      if (li) { li.classList.add('done'); li.textContent += ' → SS ' + fmtSS(r.numero); }
+    } else {
+      RES.push({protocolo: '', numero_ss: '', salva: false, repetida: false, erro: 'sem conexão'});
+      if (li) { li.classList.add('done'); li.textContent += ' → falha de conexão'; }
+    }
   }
-  // v25: o robô do PC abre as SS; espera o nº (até 3 min se o PC estiver ligado)
-  const ids = RES.map(r => r.protocolo).filter(Boolean), t0 = Date.now(), lim = online ? Math.min(60000 + 60000 * ids.length, 300000) : 8000;   // v30: ~1 min por equipamento (máx. 5 min)
-  const st = document.getElementById('midst');
-  if (!ids.length) { RES.forEach(r => r.erro = r.erro || 'sem conexão'); }
-  while (ids.length && Date.now() - t0 < lim) {
-    try {
-      const j = await apiGet('status', {ids: ids.join(',')});
-      RES.forEach((r, i) => { const x = (j.resultados || {})[r.protocolo]; if (x && !r._ok) {
-        r._ok = true; Object.assign(r, {numero_ss: x.numero_ss || '', salva: !!x.salva, repetida: !!x.repetida});
-        const li = document.getElementById('ck' + i);
-        if (li) { li.classList.add('done'); li.textContent += r.numero_ss ? ' → SS ' + r.numero_ss : ' → protocolo ' + r.protocolo; } } });
-      if (RES.every(r => r._ok || !r.protocolo)) break;
-      if (!j.robo_online && Date.now() - t0 > 8000) break;
-    } catch (e) {}
-    if (st) st.textContent = 'Abrindo a SS no sistema…';
-    await dormir(3000);
-  }
-  RES.forEach((r, i) => { const li = document.getElementById('ck' + i);
-    if (li && !li.classList.contains('done')) { li.classList.add('done'); li.textContent += r.protocolo ? ' → protocolo ' + r.protocolo : ' → falha de conexão'; } });
-  if (st) st.textContent = '';
   setTimeout(() => go('fim'), 900);
 }
 
@@ -1191,5 +1183,33 @@ if (!restaurarEstado()) render('inicio');
 
 </script>
 
+<script type="module">
+// v35: gravação da SS no sistema novo (Firebase ff-atendimento)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db = getFirestore(initializeApp({
+  apiKey: "AIzaSyDYul8Os92mtNRjnV-Zxe_GA8Z8ymrWfJ0", authDomain: "ff-atendimento.firebaseapp.com", projectId: "ff-atendimento",
+  storageBucket: "ff-atendimento.firebasestorage.app", messagingSenderId: "466557786402", appId: "1:466557786402:web:98ad4085442de6d3cd6d7b"
+}));
+function codigo(){
+  const a = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  return Array.from(crypto.getRandomValues(new Uint32Array(24)), x => a[x % a.length]).join("");
+}
+window.FB_criarSS = async (d) => {
+  const cod = codigo(), agora = new Date().toISOString(), status = "recebida";
+  const numero = await runTransaction(db, async t => {
+    const cRef = doc(db, "contadores", "ss"), c = await t.get(cRef);
+    const n = c.data().ultimo + 1;
+    t.set(doc(db, "ss", String(n)), Object.assign({}, d, {
+      numero: n, status, ordem: n, acompanhar: cod, criado_em: serverTimestamp(),
+      etapas: { recebida: agora }, historico: [{ em: agora, por: "formulário do cliente", acao: "SS aberta pelo cliente" }]
+    }));
+    t.set(doc(db, "acompanhar", cod), { ss: n, status, teste: !!d.teste, equipamento: d.equipamento || "", tag: d.tag || "", etapas: { recebida: agora } });
+    t.update(cRef, { ultimo: n });
+    return n;
+  });
+  return { numero, codigo: cod };
+};
+</script>
 </body>
 </html>

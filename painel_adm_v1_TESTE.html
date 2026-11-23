@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel ADM FF – v1 TESTE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout aprovado em 04/10 (protótipo do Painel ADM): alertas no topo; fila | técnicos; abas embaixo; no celular, abas no rodapé */
+:root{
+  --bg:#EEF1F5; --panel:#FFFFFF; --sunk:#F4F6F9; --ink:#14202C; --muted:#5B6B7B; --line:#D6DDE5;
+  --ff:#0C427E; --ffo:#E75723; --safety:#F2B705; --navy:#1B2A3A;
+  --ok:#2E7D4F; --warn:#B7791F; --crit:#C53030; --crit-bg:#FDECEC; --warn-bg:#FFF6E0; --ok-bg:#E8F5EE; --info-bg:#E7EEF7;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--safety);outline-offset:1px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+
+/* topo */
+.teste{background:var(--safety);color:var(--navy);text-align:center;font:700 13px var(--body);padding:3px}
+.top{background:var(--navy);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font:700 22px/1 var(--display);letter-spacing:.03em}.logo b{color:var(--safety)}
+.top .sub{font-size:13px;opacity:.75}
+.top .sp{flex:1}
+.tbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;text-decoration:none}
+.tbtn.sis{background:#0C427E;border-color:#0C427E}.tbtn.sis:hover{background:var(--ffo);border-color:var(--ffo)}
+.tbtn.on{background:var(--safety);color:var(--navy);border-color:var(--safety)}
+.quem{font-size:12.5px;opacity:.8}
+.stripe{height:6px;background:repeating-linear-gradient(-45deg,var(--safety) 0 10px,var(--navy) 10px 20px)}
+
+/* login */
+.login{max-width:380px;margin:60px auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:10px}
+.login h1{font:700 26px/1.1 var(--display);margin:0}
+.login p{margin:0;color:var(--muted);font-size:14px}
+.login input{font:inherit;padding:10px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+.erro{color:var(--crit);font-size:14px;font-weight:600}
+.linkb{background:none;border:0;color:var(--ff);text-decoration:underline;padding:0;font-size:13px;justify-self:start}
+
+/* KPIs e alertas */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:10px 16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.kpi b{display:block;font:700 26px/1 var(--display)}
+.kpi span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi.alert b{color:var(--crit)}
+.alerts{padding:0 16px 10px;display:grid;gap:6px}
+.al{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-radius:10px;padding:8px 12px;border:1px solid var(--line);background:var(--panel)}
+.al.crit{background:var(--crit-bg);border-color:var(--crit)}
+.al.warn{background:var(--warn-bg);border-color:var(--warn)}
+.al .ic{font:700 13px var(--display);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:5px;color:#fff;background:var(--crit)}
+.al.warn .ic{background:var(--warn)}
+.al .tx{flex:1;min-width:200px}
+.btn{border:1.5px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-weight:600;font-size:14px;text-decoration:none;display:inline-block}
+.btn.pri{background:var(--ff);border-color:var(--ff);color:#fff}
+.btn.go{background:var(--safety);border-color:var(--safety);color:var(--navy)}
+.btn.red{background:var(--crit);border-color:var(--crit);color:#fff}
+.btn.sm{padding:4px 9px;font-size:13px}
+
+/* grade principal */
+.main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;padding:0 16px 12px;align-items:start}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-width:0;display:flex;flex-direction:column}
+.colh{display:flex;align-items:baseline;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.colh h2{font:700 19px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase;margin:0}
+.colh small{color:var(--muted);font-size:13px}
+.colh .sp{flex:1}
+.colb{padding:10px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.subh{font:700 15px var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--warn);margin:4px 2px 0}
+
+/* cards de SS */
+.ss{border:1.5px solid var(--line);border-radius:10px;background:var(--sunk);padding:9px 10px;display:grid;gap:6px;min-width:0}
+.ss.fin{border-color:var(--warn);background:var(--warn-bg)}
+.ss.nova{border-color:var(--safety);box-shadow:0 0 0 3px #F2B70555}
+.chip.nova{background:var(--safety);color:var(--navy);border-color:var(--safety)}
+.ss .r1{display:flex;align-items:center;gap:8px;min-width:0}
+.ord{flex:none;width:26px;height:26px;border-radius:6px;background:var(--navy);color:#fff;display:grid;place-items:center;font:700 15px var(--display)}
+.ssn{font:500 14px var(--mono);white-space:nowrap}
+.emp{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.mv{display:flex;gap:2px}.mv button{border:1px solid var(--line);background:var(--panel);border-radius:5px;width:26px;height:24px;font-size:12px;padding:0}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.chip.parado{background:var(--crit-bg);color:var(--crit);border-color:var(--crit)}
+.chip.alerta{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.chip.teste{background:var(--safety);color:var(--navy);border-color:var(--safety)}
+.chip.tempo.t1{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.chip.tempo.t2{background:var(--crit);color:#fff;border-color:var(--crit);animation:pisca 1s steps(2,start) infinite}
+@keyframes pisca{50%{opacity:.35}}
+.ss.atraso{border-color:var(--crit)!important;box-shadow:0 0 0 2px var(--crit)}
+.chip.tag{font-family:var(--mono);color:var(--ink)}
+.rel{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.contato{font-size:12.5px;color:var(--muted)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.refs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.refs input{font:500 13px var(--mono);width:120px;padding:4px 7px;border:1.5px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+
+/* técnicos */
+.tec{border:1.5px solid var(--line);border-radius:10px;padding:9px 10px;display:grid;gap:6px;background:var(--sunk);min-width:0}
+.tec .r1{display:flex;align-items:center;gap:8px}
+.av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 14px var(--display);color:#fff}
+.tec .nm{font-weight:600;flex:1;min-width:0}
+.tec .nm small{display:block;font:500 12px var(--mono);color:var(--muted)}
+.st{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;color:#fff;white-space:nowrap}
+.fila{display:grid;gap:4px;font-size:13px}
+.fila .it{display:grid;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+.fila .it .l{display:flex;gap:6px;align-items:baseline;min-width:0}
+.fila .k{font:700 13px var(--display);color:var(--muted);min-width:44px}
+.fila .ativa{border-color:var(--ff)}.fila .ativa .k{color:var(--ff)}
+.fila .x{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.livre{font-size:12px;color:var(--muted)}
+
+/* abas inferiores */
+.bottom{margin:0 16px 16px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:6px 8px 0;overflow-x:auto}
+.tab{border:0;background:none;padding:8px 12px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tec.almoco{opacity:.75;background:repeating-linear-gradient(45deg,transparent 0 10px,rgba(107,119,133,.07) 10px 20px)}
+.tab.on{color:var(--ink);border-bottom-color:var(--safety)}
+.tbl{overflow-x:auto;padding:8px 12px 12px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:620px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.ok{color:var(--ok);font-weight:600}
+.vazio{color:var(--muted);font-size:14px;padding:8px 2px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;margin-bottom:12px}
+.form label{display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+.form input,.form select{font:inherit;padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink)}
+
+/* modal e toast */
+.mdl{position:fixed;inset:0;z-index:40;background:rgba(10,20,30,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.mdl.on{display:flex}
+.mbox{background:var(--panel);border-radius:14px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:16px;display:grid;gap:10px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.mbox>div:last-child{position:sticky;bottom:-16px;background:var(--panel);padding:10px 0 4px;border-top:1px solid var(--line);z-index:2}
+.mbox h3{font:700 22px/1.1 var(--display);margin:0}
+.mbox .fl{display:grid;gap:3px;font-size:13px;font-weight:600;color:var(--muted)}
+.mbox .fl input,.mbox .fl select{font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:8px;padding:7px 9px}
+.pst{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.pst.ok{background:var(--ok-bg,#E8F5EE);color:var(--ok);border-color:var(--ok)}.pst.crit{background:var(--crit-bg);color:var(--crit);border-color:var(--crit)}.pst.warn{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.mbox textarea{font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:8px;padding:7px 9px;min-height:80px;resize:vertical}
+.opt{display:flex;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--sunk)}
+.opt .nm{flex:1;min-width:0}.opt .nm small{display:block;color:var(--muted);font-size:12.5px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--navy);color:#fff;border-radius:10px;padding:10px 16px;font-size:14px;max-width:min(92vw,520px);box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:60}
+
+/* celular */
+.mnav{display:none}
+@media (max-width:900px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kpi:nth-child(n+4){display:none}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .col[data-pane]{display:none}
+  body[data-pane="fila"] .col[data-pane="fila"],body[data-pane="tec"] .col[data-pane="tec"]{display:flex}
+  .bottom{display:none}
+  body[data-pane="mais"] .bottom{display:block}
+  .colb{max-height:none}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  .mnav{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--navy);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:10}
+  .mnav button{background:none;border:0;color:#fff;opacity:.65;font:600 13px var(--body);padding:8px 0;border-radius:8px}
+  .mnav button.on{opacity:1;background:rgba(255,255,255,.12)}
+  .mnav .n{display:inline-block;min-width:18px;background:var(--crit);color:#fff;border-radius:99px;font-size:11px;padding:0 5px;margin-left:4px}
+  .top .sub,.quem{display:none}
+}
+</style>
+</head>
+<body data-pane="fila">
+<div class="teste">AMBIENTE DE TESTE – painel_adm_v1_TESTE (rev. 24)</div>
+<header class="top">
+  <div class="logo">FF <b>LOGÍSTICA</b></div>
+  <div class="sub">Painel ADM · triagem e designação de técnicos</div>
+  <div class="sp"></div>
+  <span class="mono" id="relogio" style="font-size:14px">--:--</span>
+  <span class="quem" id="quem"></span>
+  <button class="tbtn" id="bSom" aria-pressed="false" hidden>🔔 Som desligado</button>
+  <button class="tbtn" id="bTeste" hidden>+ Criar SS de teste</button>
+  <button class="tbtn" id="bTesteR" hidden>+ SS teste (cliente restrito)</button>
+  <a class="tbtn sis" href="https://br.sismetro.com/indexNEW.php?f=1" target="_blank" rel="noopener">🔧 Abrir Sismetro</a>
+  <button class="tbtn" id="bSair" hidden>Sair</button>
+</header>
+<div class="stripe"></div>
+
+<!-- LOGIN -->
+<section class="login" id="telaLogin">
+  <h1>Entrar no Painel ADM</h1>
+  <p>Use o seu login do sistema.</p>
+  <input id="lEmail" type="email" placeholder="e-mail" autocomplete="username">
+  <input id="lSenha" type="password" placeholder="senha" autocomplete="current-password">
+  <button class="btn pri" id="lEntrar">Entrar</button>
+  <button class="linkb" id="lEsqueci">Esqueci a senha</button>
+  <div class="erro" id="lErro"></div>
+</section>
+
+<!-- PAINEL -->
+<div id="telaPainel" hidden>
+  <section class="kpis" id="kpis"></section>
+  <section class="alerts" id="alerts" aria-live="polite"></section>
+
+  <div class="main">
+    <section class="col" data-pane="fila">
+      <div class="colh"><h2>Aguardando técnico</h2><small id="filaN"></small></div>
+      <div class="colb" id="fila"></div>
+    </section>
+    <section class="col" data-pane="tec">
+      <div class="colh"><h2>Técnicos</h2><small id="tecN"></small></div>
+      <div class="colb" id="tecs"></div>
+    </section>
+  </div>
+
+  <section class="bottom">
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-t="exec">Em execução</button>
+      <button class="tab" data-t="fin">Finalizadas hoje</button>
+      <button class="tab" data-t="ped">Pedidos recebidos hoje</button>
+      <button class="tab" data-t="prev">Preventivas</button>
+      <button class="tab" data-t="eq">Equipamentos</button>
+      <button class="tab" data-t="alm">Almoço</button>
+      <button class="tab" data-t="cad">Cadastro de técnicos</button>
+    </div>
+    <div class="tbl" id="tabela"></div>
+  </section>
+</div>
+
+<nav class="mnav" aria-label="Seções" id="mnav" hidden>
+  <button data-p="fila" class="on">Fila<span class="n" id="mnFila"></span></button>
+  <button data-p="tec">Técnicos</button>
+  <button data-p="mais">Mais</button>
+</nav>
+
+<!-- modal designar -->
+<div class="mdl" id="mDes" role="dialog" aria-modal="true" aria-labelledby="mDesT"><div class="mbox">
+  <h3 id="mDesT">Designar técnico</h3>
+  <div class="rel" id="mDesSub"></div>
+  <div id="mDesLista" style="display:grid;gap:8px"></div>
+  <div class="rel">A sugestão por chegada estimada entra quando a Rota Exata estiver integrada.</div>
+  <div style="display:flex;justify-content:flex-end"><button class="btn" data-fechar="mDes">Fechar</button></div>
+</div></div>
+
+<!-- modal motivo (cancelar) -->
+<div class="mdl" id="mHor" role="dialog" aria-modal="true" aria-labelledby="mHorT"><div class="mbox">
+  <h3 id="mHorT">Concluir SS · horímetro</h3>
+  <div class="rel" id="mHorSub"></div>
+  <div class="rel">Horímetro de TODAS as empilhadeiras do cliente (vem do cadastro), uma vez por pedido. Não conseguiu ler? Marque e informe o motivo.</div>
+  <div id="mHorLin" style="display:grid;gap:8px"></div>
+  <label style="display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600"><input type="checkbox" id="mHorSem"> Sem empilhadeira no cliente</label>
+  <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="mHorConf"> Confirmo as leituras (salto grande de horas)</label>
+  <div class="erro" id="mHorE"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-fechar="mHor">Voltar</button><button class="btn go" id="mHorOk">Concluir SS</button></div>
+</div></div>
+<div class="mdl" id="mMot" role="dialog" aria-modal="true" aria-labelledby="mMotT"><div class="mbox">
+  <h3 id="mMotT">Cancelar SS</h3>
+  <div class="rel" id="mMotSub"></div>
+  <textarea id="mMotTx" placeholder="Motivo do cancelamento (obrigatório)"></textarea>
+  <div class="erro" id="mMotE"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-fechar="mMot">Voltar</button><button class="btn red" id="mMotOk">Cancelar SS</button></div>
+</div></div>
+
+<!-- rev. 19: editar equipamento -->
+<div class="mdl" id="mEq" role="dialog" aria-modal="true" aria-labelledby="mEqT"><div class="mbox">
+  <h3 id="mEqT">Equipamento</h3>
+  <div class="rel" id="mEqSub"></div>
+  <label class="fl">TAG<input id="eqTag" style="text-transform:uppercase;font-family:var(--mono)"></label>
+  <label class="fl">Cliente (vazio = base FF)<input id="eqCliIn" list="eqCli" autocomplete="off" placeholder="digite e escolha na lista"><datalist id="eqCli"></datalist></label>
+  <label class="fl">Situação<select id="eqSitE"><option>Em operação no cliente</option><option>Na base FF</option><option>A completar</option><option>Inativo (operação encerrada)</option><option>Inativo (vendido/baixado)</option></select></label>
+  <label class="fl" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="eqCf"> ❄ Câmara fria (preventiva 250 h ou 45 dias)</label>
+  <label class="fl">Início do ciclo da preventiva<input id="eqIni" type="date"></label>
+  <label class="fl">Observação (vai para o histórico)<textarea id="eqObs" maxlength="300"></textarea></label>
+  <label class="fl" style="display:flex;gap:8px;align-items:center;color:var(--ink)"><input type="checkbox" id="eqRevOk"> Cadastro conferido – tirar da lista "a revisar"</label>
+  <div class="erro" id="mEqE"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-fechar="mEq">Voltar</button><button class="btn go" id="mEqOk">Gravar</button></div>
+</div></div>
+
+<!-- rev. 17: liberação financeira com motivo -->
+<div class="mdl" id="mLib" role="dialog" aria-modal="true" aria-labelledby="mLibT"><div class="mbox">
+  <h3 id="mLibT">Liberar SS (restrição financeira)</h3>
+  <div class="rel" id="mLibSub"></div>
+  <label class="fl">Autorizado por<select id="mLibQuem"><option value="">Escolha…</option><option>Financeiro</option><option>Diretor</option></select></label>
+  <label class="fl">Motivo da liberação (obrigatório)<textarea id="mLibTx" maxlength="500" placeholder="Ex.: cliente apresentou comprovante de pagamento da fatura nº …"></textarea></label>
+  <div class="erro" id="mLibE"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-fechar="mLib">Voltar</button><button class="btn go" id="mLibOk">Liberar</button></div>
+</div></div>
+
+<!-- rev. 16: de onde o técnico sai (define a animação da página do cliente) -->
+<div class="mdl" id="mOri" role="dialog" aria-modal="true" aria-labelledby="mOriT"><div class="mbox">
+  <h3 id="mOriT">A caminho · de onde o técnico está saindo?</h3>
+  <div class="rel" id="mOriSub"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button class="btn pri" data-ori="residencia">🏠 Residência</button><button class="btn pri" data-ori="base">🏭 Base FF</button>
+    <button class="btn pri" data-ori="cliente">🏢 Outro cliente</button><button class="btn pri" data-ori="rua">🚐 Outro local</button>
+  </div>
+  <div class="rel">Define a animação que o cliente vê. Depois virá sozinho pela posição da Rota Exata.</div>
+  <div style="display:flex;justify-content:flex-end"><button class="btn" data-fechar="mOri">Voltar</button></div>
+</div></div>
+
+<!-- rev. 16: registrar ligação ao cliente (preventiva) -->
+<div class="mdl" id="mLig" role="dialog" aria-modal="true" aria-labelledby="mLigT"><div class="mbox">
+  <h3 id="mLigT">Registrar ligação</h3>
+  <div class="rel" id="mLigSub"></div>
+  <label class="fl">Data e hora do contato<input id="lgEm" type="datetime-local"></label>
+  <label class="fl">Resultado<select id="lgRes"><option value="">Escolha…</option><option value="confirmou">Cliente confirmou a data agendada</option><option value="reagendou">Cliente reagendou (nova data)</option><option value="nao_atendeu">Não atendeu / não conseguiu reagendar</option></select></label>
+  <label class="fl" id="lgNomeL">Nome de quem atendeu no cliente<input id="lgNome" maxlength="80"></label>
+  <div id="lgReag" hidden style="display:grid;gap:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="fl">Nova data<input id="lgData" type="date"></label><label class="fl">Nova hora<input id="lgHora" type="time"></label></div>
+    <label class="fl">Motivo alegado pelo cliente<select id="lgMot"></select></label>
+    <label class="fl">Descreva (obrigatório se "Outro")<textarea id="lgObs" maxlength="500"></textarea></label>
+  </div>
+  <div class="erro" id="mLigE"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-fechar="mLig">Voltar</button><button class="btn go" id="mLigOk">Registrar</button></div>
+</div></div>
+
+<!-- rev. 16: aprovar a nova data pedida pelo cliente -->
+<div class="mdl" id="mNova" role="dialog" aria-modal="true" aria-labelledby="mNovaT"><div class="mbox">
+  <h3 id="mNovaT">Aprovar nova data</h3>
+  <div class="rel" id="mNovaSub"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="fl">Data<input id="nvData" type="date"></label><label class="fl">Hora<input id="nvHora" type="time"></label></div>
+  <div class="rel">Um novo e-mail de confirmação (Sim/Não) sai para o cliente 2 dias antes da nova data.</div>
+  <div class="erro" id="mNovaE"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" data-fechar="mNova">Voltar</button><button class="btn go" id="mNovaOk">Aprovar e reagendar</button></div>
+</div></div>
+
+<!-- rev. 16: histórico da preventiva (rastreabilidade ISO 9001) -->
+<div class="mdl" id="mHist" role="dialog" aria-modal="true" aria-labelledby="mHistT"><div class="mbox">
+  <h3 id="mHistT">Histórico da preventiva</h3>
+  <div id="mHistC" style="display:grid;gap:6px;font-size:14px"></div>
+  <div style="display:flex;justify-content:flex-end"><button class="btn" data-fechar="mHist">Fechar</button></div>
+</div></div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, getDocs, onSnapshot, query, where, updateDoc, addDoc, deleteDoc, setDoc,
+         writeBatch, runTransaction, serverTimestamp, arrayUnion, Timestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDYul8Os92mtNRjnV-Zxe_GA8Z8ymrWfJ0",
+  authDomain: "ff-atendimento.firebaseapp.com",
+  projectId: "ff-atendimento",
+  storageBucket: "ff-atendimento.firebasestorage.app",
+  messagingSenderId: "466557786402",
+  appId: "1:466557786402:web:98ad4085442de6d3cd6d7b"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ---------------------------------------------------------------- constantes
+const ATIVOS = ["recebida", "aguardando_financeiro", "designada", "a_caminho", "chegou", "em_atendimento"];
+const EM_CAMPO = ["designada", "a_caminho", "chegou", "em_atendimento"];
+const ROT = {
+  recebida: "Aguardando técnico", aguardando_financeiro: "Aguardando financeiro",
+  designada: "Designada", a_caminho: "A caminho", chegou: "Chegou ao cliente",
+  em_atendimento: "Em atendimento", concluida: "Concluída", cancelada: "Cancelada"
+};
+const COR = { livre: "#2E7D4F", designada: "#7A5AC8", a_caminho: "#E75723", chegou: "#B7791F", em_atendimento: "#0C427E" };
+const PROX = { designada: ["a_caminho", "A caminho"], a_caminho: ["chegou", "Chegou"], chegou: ["em_atendimento", "Iniciar atendimento"], em_atendimento: ["concluida", "Concluir"] };
+
+// ---------------------------------------------------------------- estado
+const S = { user: null, nome: "", ss: new Map(), hojeC: new Map(), hojeE: new Map(), tec: [], prev: [], aba: "exec", som: false, carregado: false, unsub: [] };
+
+// ---------------------------------------------------------------- utilidades
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => String(n ?? "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const agora = () => new Date();
+const dt = v => v && v.toDate ? v.toDate() : (v ? new Date(v) : null);
+const hm = d => d ? d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "–";
+const minDesde = d => d ? Math.max(0, Math.round((Date.now() - d.getTime()) / 60000)) : 0;
+const dur = m => m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}` : `${m} min`;
+function toast(t) { const el = $("#toast"); el.innerHTML = t; el.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => el.hidden = true, 8000); }
+function msgErro(e) {
+  const c = (e && e.code) || "";
+  if (c.includes("permission-denied")) return "Sem permissão (confira se o seu usuário está ativo na coleção usuarios).";
+  if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-email")) return "E-mail ou senha incorretos.";
+  if (c.includes("too-many-requests")) return "Muitas tentativas. Aguarde alguns minutos.";
+  if (c.includes("unavailable") || c.includes("network")) return "Sem conexão com a internet.";
+  return (c ? c + " – " : "") + ((e && e.message) || e);
+}
+let ctxA = null;
+function bip() {
+  if (!S.som) return;
+  try {
+    ctxA = ctxA || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctxA.createOscillator(), g = ctxA.createGain();
+    o.frequency.value = 880; o.type = "sine";
+    g.gain.setValueAtTime(0.0001, ctxA.currentTime); g.gain.exponentialRampToValueAtTime(0.12, ctxA.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctxA.currentTime + 0.5);
+    o.connect(g).connect(ctxA.destination); o.start(); o.stop(ctxA.currentTime + 0.55);
+  } catch (e) {}
+}
+function destinoBox(s) {
+  const d = s.destino, r = s.rastreio;
+  const rast = s.status === "a_caminho" && r && r.em
+    ? `<div class="refs" style="color:var(--ink)">🛰 ${r.chegando ? "<b>está chegando</b>" : r.eta_min != null ? `~${r.eta_min} min · ${String(r.km).replace(".", ",")} km · chega ${esc(r.eta_hora || "")}` : "posição recebida"} <span class="livre">(posição ${hm(dt(r.em))})</span></div>`
+    : (s.status === "a_caminho" ? '<div class="refs">🛰 aguardando posição (ponte do mapa ligada?)</div>' : "");
+  return `<div class="refs">📍 Destino no mapa: ${d && d.lat != null ? `<b>${esc(d.nome || "ponto informado")}</b> <span class="livre">(${esc(d.origem || "")})</span>` : '<span class="livre">automático pelo nome do cliente</span>'}
+    <input data-dst="${esc(s.id)}" id="dst${esc(s.id)}" placeholder="lat, lng (Google Maps)" style="width:170px">
+    <button class="btn sm" data-dsave="${esc(s.id)}">Salvar destino</button></div>${rast}`;
+}
+async function salvarDestino(id) {
+  const s = S.ss.get(id), el = document.getElementById("dst" + id); if (!s || !el) return;
+  const m = el.value.replace(/[()]/g, "").match(/(-?\d+(?:[.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[.,]\d+)?)/);
+  const lat = m ? parseFloat(m[1].replace(",", ".")) : NaN, lng = m ? parseFloat(m[2].replace(",", ".")) : NaN;
+  if (!(lat > -35 && lat < 6 && lng > -75 && lng < -30)) { toast("Cole as coordenadas do Google Maps, ex.: -22.8190, -43.2802"); el.focus(); return; }
+  const dest = { lat, lng, nome: "ponto informado pelo ADM", origem: "manual" };
+  el.blur();
+  if (await mudar(s, { destino: dest }, `Destino no mapa: ${lat}, ${lng}`, { destino: dest })) toast(`Destino da SS ${fmt(s.numero)} gravado.`);
+}
+// rev. 16b: "Ver como o cliente" mostra todas as SS do mesmo pedido (como o link que o cliente recebe)
+function linkCliente(s) {
+  if (!s.acompanhar) return "";
+  const cods = [s.acompanhar, ...doPedido(s).map(x => x.acompanhar).filter(c => c && c !== s.acompanhar)];
+  return `<a class="btn sm" href="acompanhar_v3_TESTE.html?c=${cods.map(encodeURIComponent).join(",")}&adm=1" target="_blank" rel="noopener">👁 Ver como o cliente</a>`;
+}
+// rev. 15: aviso ao cliente pelo WhatsApp (mensagem pronta; o ADM só aperta Enviar) até existir a API
+const URL_ACOMP = "https://lcslobo41-blip.github.io/atendimento/acompanhar_v3_TESTE.html";   // publicar a página no GitHub
+function foneWa(t) { const d = String(t || "").replace(/\D/g, ""); return d.length >= 12 ? d : d.length >= 10 ? "55" + d : ""; }
+function msgDesignacao(lista, t) {
+  const s = lista[0], nome = String(s.contato_nome || "").trim().split(/\s+/)[0] || "Prezado(a) cliente";
+  const h = new Date().getHours(), sd = h < 12 ? "bom dia" : h < 18 ? "boa tarde" : "boa noite";
+  const ss = lista.map(x => `SS nº ${fmt(x.numero)} (${[x.equipamento, x.tag].filter(Boolean).join(" ")})`).join(", ");
+  const vei = [t.veiculo, t.placa ? "placa " + t.placa : ""].filter(Boolean).join(", ");
+  const cods = lista.map(x => x.acompanhar).filter(Boolean).join(",");
+  return `${nome}, ${sd}! O técnico ${t.nome} foi designado para ${ss}.` + (vei ? ` Veículo: ${vei}.` : "") +
+    (cods ? ` Acompanhe o atendimento e o trajeto do técnico até você: ${URL_ACOMP}?c=${cods}` : "");
+}
+function botaoAviso(lista, t) {
+  const f = foneWa(lista[0] && lista[0].contato_celular); if (!f || !t) return "";
+  return `<a class="btn sm go" href="https://wa.me/${f}?text=${encodeURIComponent(msgDesignacao(lista, t))}" target="_blank" rel="noopener">📲 Avisar cliente no WhatsApp</a>`;
+}
+// rev. 21: rota até o cliente para o técnico (Waze / Google Maps, com trânsito ao vivo)
+function destinoRota(s) {
+  const d = s.destino;
+  if (d && d.lat != null) return { ll: `${d.lat},${d.lng}`, q: encodeURIComponent(d.endereco || d.nome || s.cliente || "") };
+  const e = s.endereco || s.cliente || ""; return e ? { ll: "", q: encodeURIComponent(e) } : null;
+}
+function msgRota(lista, t) {
+  const s = lista[0], r = destinoRota(s); if (!r) return "";
+  const waze = r.ll ? `https://waze.com/ul?ll=${r.ll}&navigate=yes` : `https://waze.com/ul?q=${r.q}&navigate=yes`;
+  const gm = `https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${r.ll || r.q}`;
+  return `${(t.nome || "").split(" ")[0]}, nova designação:\n` +
+    lista.map(x => `• SS ${fmt(x.numero)} – ${x.equipamento || ""} ${x.tag || ""}`).join("\n") +
+    `\nCliente: ${s.cliente || ""}\n\nRota (abre a navegação com trânsito):\nWaze: ${waze}\nGoogle Maps: ${gm}`;
+}
+function botaoRota(lista, t) {
+  const f = foneWa(t && t.celular), m = t ? msgRota(lista, t) : ""; if (!f || !m) return "";
+  return `<a class="btn sm" href="https://wa.me/${f}?text=${encodeURIComponent(m)}" target="_blank" rel="noopener">🧭 Enviar rota ao técnico</a>`;
+}
+function linkSismetro(ref) { return `https://br.sismetro.com/indexNEW.php?f=10&e=${encodeURIComponent(ref)}`; }
+
+// ---------------------------------------------------------------- login
+$("#lEntrar").onclick = async () => {
+  $("#lErro").textContent = "";
+  try { await signInWithEmailAndPassword(auth, $("#lEmail").value.trim(), $("#lSenha").value); }
+  catch (e) { $("#lErro").textContent = msgErro(e); }
+};
+$("#lSenha").addEventListener("keydown", e => { if (e.key === "Enter") $("#lEntrar").click(); });
+$("#lEsqueci").onclick = async () => {
+  const em = $("#lEmail").value.trim();
+  if (!em) { $("#lErro").textContent = "Digite o seu e-mail e clique de novo em Esqueci a senha."; return; }
+  try { await sendPasswordResetEmail(auth, em); $("#lErro").innerHTML = `<span class="ok">Enviamos o link de nova senha para ${esc(em)}.</span>`; }
+  catch (e) { $("#lErro").textContent = msgErro(e); }
+};
+$("#bSair").onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async u => {
+  S.unsub.forEach(f => f()); S.unsub = []; S.ss.clear(); S.hojeC.clear(); S.hojeE.clear(); S.tec = []; S.prev = []; S.carregado = false;
+  const logado = !!u;
+  $("#telaLogin").hidden = logado; $("#telaPainel").hidden = !logado; $("#mnav").hidden = !logado;
+  ["#bSom", "#bTeste", "#bTesteR", "#bSair"].forEach(s => $(s).hidden = !logado);
+  if (!u) { $("#quem").textContent = ""; return; }
+  try {
+    const d = await getDoc(doc(db, "usuarios", u.email));
+    if (!d.exists() || d.data().ativo !== true) throw { code: "permission-denied" };
+    S.user = u; S.nome = d.data().nome || u.email;
+    $("#quem").textContent = S.nome;
+  } catch (e) {
+    $("#telaLogin").hidden = false; $("#telaPainel").hidden = true; $("#mnav").hidden = true;
+    $("#lErro").textContent = "Login sem acesso ao Painel ADM. " + msgErro(e);
+    await signOut(auth); return;
+  }
+  ouvir();
+});
+
+// ---------------------------------------------------------------- dados ao vivo
+function ouvir() {
+  const ini = new Date(); ini.setHours(0, 0, 0, 0);
+  S.unsub.push(onSnapshot(query(collection(db, "ss"), where("status", "in", ATIVOS)), snap => {
+    let novas = 0;
+    snap.docChanges().forEach(ch => {
+      if (ch.type === "removed") S.ss.delete(ch.doc.id);
+      else {
+        if (ch.type === "added" && S.carregado) novas++;
+        S.ss.set(ch.doc.id, { id: ch.doc.id, ...ch.doc.data() });
+      }
+    });
+    if (novas) { bip(); S.ultNova = [...S.ss.values()].sort((a, b) => b.numero - a.numero)[0];
+      toast(`${novas === 1 ? "Nova SS recebida" : novas + " novas SS recebidas"}${S.ultNova ? ` · SS ${fmt(S.ultNova.numero)} · ${esc(S.ultNova.cliente)}` : ""}. <button class="btn sm go" data-ir="1" style="margin-left:6px">Ver</button>`); }
+    S.carregado = true; render();
+  }, e => toast("Erro ao ler as SS: " + esc(msgErro(e)))));
+  S.unsub.push(onSnapshot(query(collection(db, "ss"), where("criado_em", ">=", Timestamp.fromDate(ini))), snap => {
+    S.hojeC.clear(); snap.forEach(d => S.hojeC.set(d.id, { id: d.id, ...d.data() })); render();
+  }, e => toast("Erro ao ler as SS de hoje: " + esc(msgErro(e)))));
+  S.unsub.push(onSnapshot(query(collection(db, "ss"), where("encerrada_em", ">=", Timestamp.fromDate(ini))), snap => {
+    S.hojeE.clear(); snap.forEach(d => S.hojeE.set(d.id, { id: d.id, ...d.data() })); render();
+  }, e => toast("Erro ao ler as finalizadas: " + esc(msgErro(e)))));
+  ouvirTecnicos(); ouvirAlmocos();
+  ouvirPreventivas();
+  carregarEquip();
+}
+// preventivas (rev. 14): e-mail de confirmação sai pelo Apps Script, DIAS_ANTES dias antes
+const DIAS_ANTES = 2;
+// rev. 18: cliente e TAG da preventiva escolhidos do cadastro (nada digitado à mão → relatório ISO sem nomes duplicados)
+S.clientes = []; S.prevCli = null; S.prevTags = [];
+async function carregarClientes() {
+  try {
+    const q = await getDocs(collection(db, "clientes")); const l = [];
+    q.forEach(d => { const c = d.data(); if (/^Inativo/i.test(c.situacao || "")) return;
+      const nome = (c.nome_fantasia || c.razao_social || "").trim(); if (!nome) return;
+      l.push({ cod: c.cod || d.id, nome, razao: c.razao_social || "", rot: nome + (c.razao_social && c.razao_social !== nome ? " · " + c.razao_social : "") + " (" + (c.cod || d.id) + ")" }); });
+    S.clientes = l.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")); render();
+  } catch (e) { toast("Não leu o cadastro de clientes: " + esc(msgErro(e))); }
+}
+async function escolherClientePrev() {
+  const v = $("#pCli").value.trim(), c = (S.clientes || []).find(x => x.rot === v);
+  S.prevCli = c || null; S.prevTags = [];
+  if (c) {
+    try { const q = await getDocs(query(collection(db, "equipamentos"), where("cod_cliente", "==", c.cod)));
+      q.forEach(d => { const e = d.data(); if (/empilhadeira/i.test(e.tipo || "") && e.tag && !/^Inativo|A completar/i.test(e.situacao || "")) S.prevTags.push(limpaTag(e.tag)); });
+      S.prevTags = [...new Set(S.prevTags)].sort(); } catch (e) { }
+    await buscarContato();
+  } else if (v) $("#pInfo").textContent = "Escolha o cliente na lista (digite parte do nome e clique na opção).";
+  render();
+}
+function ouvirPreventivas() {
+  if (!S.clientes.length) carregarClientes();
+  const u = onSnapshot(collection(db, "preventivas"), snap => {
+    S.prevErro = ""; S.prev = []; snap.forEach(d => S.prev.push({ id: d.id, ...d.data() })); render();
+  }, e => {
+    S.prevErro = "Sem acesso às preventivas: publique as regras v4 no Firebase (Firestore › Regras). Tentando de novo em 10 s…";
+    render(); setTimeout(() => { if (S.user) ouvirPreventivas(); }, 10000);
+  });
+  S.unsub.push(u);
+}
+const hojeISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const dataBR = iso => iso ? iso.split("-").reverse().join("/") : "";
+function diaEnvio(iso) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() - DIAS_ANTES); return d; }
+// rev.20: quando o e-mail sai (mesma regra do Apps Script v6)
+function horasAte(data, hora) { return (new Date(data + "T" + (hora || "08:00") + ":00") - agora()) / 3600000; }
+function quandoEmail(data, hora) {
+  if (horasAte(data, hora) < 12 || data === hojeISO()) return "⚠ mesmo dia ou menos de 12 h: sem e-mail – registrar ligação";
+  const env = diaEnvio(data); env.setHours(0, 0, 0, 0); const hj = new Date(agora()); hj.setHours(0, 0, 0, 0);
+  if (env <= hj) return new Date(agora()).getHours() < 19 ? "e-mail sai na próxima rodada (até 1 h)" : "e-mail sai amanhã às 7h";
+  return `e-mail sai em ${diaEnvio(data).toLocaleDateString("pt-BR")}, a partir das 7h`;
+}
+async function buscarContato() {
+  const cli = S.prevCli ? S.prevCli.nome : $("#pCli").value.trim(); if (!cli) return;
+  try {
+    const q = await getDocs(query(collection(db, "ss"), where("cliente", "==", cli)));
+    let u = null; q.forEach(d => { const x = d.data(); if (x.contato_email && (!u || x.numero > u.numero)) u = x; });
+    if (u) { if (!$("#pEmail").value) $("#pEmail").value = u.contato_email; if (!$("#pNome").value) $("#pNome").value = u.contato_nome || ""; $("#pInfo").textContent = `Contato da última SS (${fmt(u.numero)}). Corrija se precisar.`; }
+    else $("#pInfo").textContent = "Nenhuma SS anterior com e-mail para esse cliente: digite o e-mail.";
+  } catch (e) { $("#pInfo").textContent = "Não buscou o contato: " + msgErro(e); }
+}
+async function mostrarHorPrev() {
+  const tag = limpaTag($("#pTag").value), el = $("#pHor"); if (!tag) { el.textContent = ""; return; }
+  const a = await leituraAnterior(tag);
+  el.textContent = a && a.ultimo != null ? `Horímetro atual: ${fmtH(a.ultimo)} h (${new Date(a.em).toLocaleDateString("pt-BR")})` : "Sem leitura de horímetro para essa TAG.";
+}
+const MSG_PASSADO = "⚠ Data/hora inferior à data e hora de hoje – escolha uma data futura.";
+const MSG_CIMA = "⚠ Agendamento para o mesmo dia ou com menos de 12 h de antecedência: o e-mail NÃO será enviado. Confirme com o cliente e clique em ☎ Registrar ligação.";
+function avisoPrev() {
+  const el = $("#pAviso"); if (!el) return; const d = $("#pData").value, h = $("#pHora").value;
+  if (!d) { el.textContent = ""; return; }
+  const ha = horasAte(d, h || "23:59");
+  el.textContent = (d < hojeISO() || (h && ha <= 0)) ? MSG_PASSADO : (h && ha < 12) || d === hojeISO() ? MSG_CIMA : "";
+}
+async function salvarPrev() {
+  if (!S.prevCli) { toast("Escolha o cliente na lista do cadastro."); $("#pCli").focus(); return; }
+  const d = { cliente: S.prevCli.nome, cod_cliente: S.prevCli.cod, tag: limpaTag($("#pTag").value), data: $("#pData").value, hora: $("#pHora").value,
+    contato_nome: $("#pNome").value.trim(), email: $("#pEmail").value.trim().toLowerCase() };
+  if (!d.cliente || !d.tag || !d.data || !d.hora) { toast("Preencha cliente, TAG, data e hora."); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) { toast("E-mail do cliente inválido."); $("#pEmail").focus(); return; }
+  if (d.data < hojeISO() || horasAte(d.data, d.hora) <= 0) { toast(MSG_PASSADO); $("#pAviso").textContent = MSG_PASSADO; return; }
+  const cima = horasAte(d.data, d.hora) < 12 || d.data === hojeISO();
+  if (cima && !confirm(MSG_CIMA.replace("⚠ ", "") + "\n\nAgendar assim mesmo?")) return;
+  const bt = $("#pSalvar"); bt.disabled = true;
+  try {
+    await addDoc(collection(db, "preventivas"), { ...d, status: "agendada", email_enviado_em: null, criado_em: serverTimestamp(), criado_por: S.nome,
+      token: codigo(), ligacoes: [], historico: [{ em: agora().toISOString(), por: S.nome, acao: `Agendada para ${dataBR(d.data)} ${d.hora}` }] });
+    toast(`✔ Preventiva ${esc(d.tag)} agendada para ${dataBR(d.data)} às ${esc(d.hora)}.<br><small>${quandoEmail(d.data, d.hora)}.</small>`);
+    ["#pCli", "#pData", "#pHora", "#pNome", "#pEmail"].forEach(s => $(s).value = ""); S.prevCli = null; S.prevTags = []; $("#pInfo").textContent = ""; $("#pHor").textContent = "";
+  } catch (e) { toast("✘ Não gravou: " + esc(msgErro(e)) + "<br>Publique as regras v4."); }
+  bt.disabled = false; render();
+}
+async function acaoPrev(id, tipo) {
+  const p = S.prev.find(x => x.id === id); if (!p) return;
+  let mot = "";
+  if (tipo === "canc") {   // rev. 22: motivo obrigatório (entra no relatório ISO)
+    const ops = ["Equipamento devolvido / recolhido", "Equipamento vendido", "Contrato encerrado", "Agendamento em duplicidade / erro", "Outro"];
+    const r = prompt(`Cancelar a preventiva ${p.tag} de ${dataBR(p.data)}.\nMotivo (digite o número):\n` + ops.map((o, i) => `${i + 1} - ${o}`).join("\n"));
+    if (r === null) return;
+    const n = parseInt(r, 10); if (!(n >= 1 && n <= ops.length)) { toast("Motivo inválido – preventiva NÃO cancelada."); return; }
+    mot = ops[n - 1];
+    if (n === ops.length) { const d = (prompt("Descreva o motivo (mínimo 10 caracteres):") || "").trim(); if (d.length < 10) { toast("Motivo muito curto – preventiva NÃO cancelada."); return; } mot += " – " + d; }
+  }
+  const h = { em: agora().toISOString(), por: S.nome, acao: tipo === "canc" ? "Cancelada pelo ADM – motivo: " + mot : "Reenvio do e-mail pedido pelo ADM" };
+  try { await updateDoc(doc(db, "preventivas", id), tipo === "canc" ? { status: "cancelada", motivo_cancelamento: mot, historico: arrayUnion(h) } : { email_enviado_em: null, historico: arrayUnion(h) }); toast(tipo === "canc" ? "Preventiva cancelada." : "O e-mail será enviado de novo na próxima rodada (de hora em hora)."); }
+  catch (e) { toast("Não gravou: " + esc(msgErro(e))); }
+}
+// rev. 16: confirmação da preventiva (Sim/Não pelo e-mail), ligações do ADM, 3 tentativas → supervisão
+const MOTIVOS_PREV = ["Equipamento em operação/produção", "Feriado ou parada da empresa", "Responsável ausente", "Equipamento fora do local", "Outro (descrever)"];
+const ROT_LIG = { confirmou: "Confirmou", reagendou: "Reagendou", nao_atendeu: "Não atendeu / não conseguiu reagendar" };
+const falhas = p => (p.ligacoes || []).filter(l => l.resultado === "nao_atendeu").length;
+function statusPrev(p) {
+  const env = dt(p.email_enviado_em), r = p.resposta || {};
+  switch (p.status) {
+    case "confirmada": return `<span class="pst ok">✔ Confirmada · ${esc(p.confirmada_via || "")}</span>` + (p.ss_numero ? `<br><span class="livre">SS ${fmt(p.ss_numero)} aberta</span>` : `<br><span class="livre">SS abre em ${dataBR(p.data)}, 7h</span>`);
+    case "recusada": return `<span class="pst warn">✖ Cliente pediu outra data</span><br><span class="livre">${esc(r.nome || "")}: ${dataBR(r.data_desejada)}${r.hora_desejada ? " " + esc(r.hora_desejada) : ""} · ${esc(r.motivo || "")}${r.obs ? " – " + esc(r.obs) : ""}</span>`;
+    case "sem_resposta": return `<span class="pst crit">☎ Sem resposta – ligar para o cliente</span>` + (falhas(p) ? `<br><span class="livre">${falhas(p)} de 3 tentativas sem sucesso</span>` : "");
+    case "sem_contato": return `<span class="pst crit">⚠ Não realizada – cliente sem contato</span><br><span class="livre">${p.escalado_em ? "Supervisão avisada " + dt(p.escalado_em).toLocaleString("pt-BR") : "aviso à supervisão na próxima rodada"}</span>`;
+    default: return env ? `<span class="pst">✉ E-mail enviado ${env.toLocaleDateString("pt-BR")} ${hm(env)}</span><br><span class="livre">aguardando resposta do cliente</span>`
+      : `<span class="livre">${quandoEmail(p.data, p.hora)}</span>`;
+  }
+}
+function acoesPrev(p) {
+  const b = [];
+  if (p.status === "recusada") b.push(`<button class="btn sm go" data-pvn="${esc(p.id)}">Aprovar nova data</button>`);
+  if (["agendada", "sem_resposta", "recusada"].includes(p.status)) b.push(`<button class="btn sm ${p.status === "sem_resposta" ? "red" : ""}" data-pvl="${esc(p.id)}">☎ Registrar ligação</button>`);
+  if (p.status === "agendada" && p.email_enviado_em) b.push(`<button class="btn sm" data-pvr="${esc(p.id)}">Reenviar e-mail</button>`);
+  b.push(`<button class="btn sm" data-pvh="${esc(p.id)}">Histórico</button>`);
+  if (!["sem_contato"].includes(p.status) && !p.ss_numero) b.push(`<button class="btn sm" data-pvc="${esc(p.id)}">Cancelar</button>`);
+  return b.join("");
+}
+const localISO = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+let ligId = null;
+function abrirLigacao(id) {
+  const p = S.prev.find(x => x.id === id); if (!p) return; ligId = id;
+  const n = (p.ligacoes || []).length + 1, f = falhas(p);
+  $("#mLigT").textContent = `Registrar ligação · ${n}ª tentativa`;
+  $("#mLigSub").innerHTML = `${esc(p.cliente)} · TAG <b>${esc(p.tag)}</b> · agendada ${dataBR(p.data)} ${esc(p.hora)}<br>Contato: ${esc(p.contato_nome || "")} ${esc(p.email || "")}`
+    + (f === 2 ? `<br><b style="color:var(--crit)">3ª tentativa: se não conseguir reagendar, a preventiva vira "Não realizada" e a supervisão${""} é avisada por e-mail.</b>` : f ? `<br>${f} tentativa(s) sem sucesso até agora.` : "");
+  $("#lgEm").value = localISO(new Date()); $("#lgRes").value = ""; $("#lgNome").value = ""; $("#lgData").value = ""; $("#lgHora").value = p.hora || ""; $("#lgObs").value = "";
+  $("#lgData").min = hojeISO();
+  $("#lgMot").innerHTML = '<option value="">Escolha…</option>' + MOTIVOS_PREV.map(m => `<option>${esc(m)}</option>`).join("");
+  $("#lgReag").hidden = true; $("#mLigE").textContent = "";
+  $("#mLig").classList.add("on");
+}
+$("#lgRes").onchange = () => { const v = $("#lgRes").value; $("#lgReag").hidden = v !== "reagendou"; $("#lgNomeL").firstChild.textContent = v === "nao_atendeu" ? "Nome de quem atendeu (se alguém atendeu)" : "Nome de quem atendeu no cliente"; };
+$("#mLigOk").onclick = async () => {
+  const p = S.prev.find(x => x.id === ligId); if (!p) return;
+  const res = $("#lgRes").value, nome = $("#lgNome").value.trim(), emc = $("#lgEm").value, err = t => { $("#mLigE").textContent = t; };
+  if (!emc) return err("Informe a data e hora do contato.");
+  if (!res) return err("Escolha o resultado.");
+  if (res !== "nao_atendeu" && nome.length < 2) return err("Informe o nome de quem atendeu no cliente.");
+  const n = (p.ligacoes || []).length + 1, iso = agora().toISOString();
+  const lig = { n, em_contato: new Date(emc).toISOString(), resultado: res, nome, registrado_por: S.nome, registrado_em: iso };
+  const upd = {};
+  let acao = `Ligação ${n}ª tentativa (${new Date(emc).toLocaleString("pt-BR")}): ${ROT_LIG[res]}${nome ? " – falou com " + nome : ""}`;
+  if (res === "reagendou") {
+    const nd = $("#lgData").value, nh = $("#lgHora").value, mo = $("#lgMot").value, obs = $("#lgObs").value.trim();
+    if (!nd || nd < hojeISO()) return err("Informe a nova data (hoje ou depois).");
+    if (!nh) return err("Informe a nova hora.");
+    if (!mo) return err("Escolha o motivo alegado pelo cliente.");
+    if (mo.startsWith("Outro") && obs.length < 5) return err("Descreva o motivo.");
+    Object.assign(lig, { nova_data: nd, nova_hora: nh, motivo: mo, obs });
+    Object.assign(upd, { status: "confirmada", confirmada_via: "telefone (ADM) – reagendada", data_anterior: p.data, hora_anterior: p.hora, data: nd, hora: nh,
+      motivo_reagendamento: mo + (obs ? " – " + obs : "") });
+    acao += ` · reagendada de ${dataBR(p.data)} ${p.hora} para ${dataBR(nd)} ${nh} · motivo: ${mo}${obs ? " (" + obs + ")" : ""}`;
+  } else if (res === "confirmou") {
+    Object.assign(upd, { status: "confirmada", confirmada_via: "telefone (ADM)" });
+  } else if (falhas(p) + 1 >= 3) {
+    Object.assign(upd, { status: "sem_contato", sem_contato_em: serverTimestamp() });
+    acao += " · 3ª tentativa sem sucesso: preventiva NÃO realizada, aviso à supervisão";
+  }
+  const bt = $("#mLigOk"); bt.disabled = true;
+  try {
+    await updateDoc(doc(db, "preventivas", p.id), { ...upd, ligacoes: arrayUnion(lig), historico: arrayUnion({ em: iso, por: S.nome, acao }) });
+    fechar("mLig");
+    toast(res === "nao_atendeu" ? (upd.status === "sem_contato" ? "Registrado. 3ª tentativa: a supervisão será avisada por e-mail." : `Tentativa ${n} registrada. Tente de novo mais tarde.`)
+      : res === "confirmou" ? `✔ Preventiva ${esc(p.tag)} confirmada por telefone. A SS abre em ${dataBR(p.data)} às 7h.` : `✔ Reagendada para ${dataBR(upd.data)} ${esc(upd.hora)}. A SS abre nessa data às 7h.`);
+  } catch (e) { err("Não gravou: " + msgErro(e)); }
+  bt.disabled = false;
+};
+let novaId = null;
+function abrirNovaData(id) {
+  const p = S.prev.find(x => x.id === id); if (!p) return; novaId = id; const r = p.resposta || {};
+  $("#mNovaSub").innerHTML = `${esc(p.cliente)} · TAG <b>${esc(p.tag)}</b><br>Agendada: ${dataBR(p.data)} ${esc(p.hora)} · Cliente pediu: <b>${dataBR(r.data_desejada)}${r.hora_desejada ? " " + esc(r.hora_desejada) : ""}</b><br>Motivo: ${esc(r.motivo || "")}${r.obs ? " – " + esc(r.obs) : ""} (${esc(r.nome || "")})`;
+  $("#nvData").value = r.data_desejada || ""; $("#nvData").min = hojeISO(); $("#nvHora").value = r.hora_desejada || p.hora || ""; $("#mNovaE").textContent = "";
+  $("#mNova").classList.add("on");
+}
+$("#mNovaOk").onclick = async () => {
+  const p = S.prev.find(x => x.id === novaId); if (!p) return;
+  const nd = $("#nvData").value, nh = $("#nvHora").value;
+  if (!nd || nd < hojeISO()) { $("#mNovaE").textContent = "Informe a data (hoje ou depois)."; return; }
+  if (!nh) { $("#mNovaE").textContent = "Informe a hora."; return; }
+  const r = p.resposta || {}, iso = agora().toISOString();
+  try {
+    await updateDoc(doc(db, "preventivas", p.id), { status: "agendada", data_anterior: p.data, hora_anterior: p.hora, data: nd, hora: nh,
+      motivo_reagendamento: (r.motivo || "") + (r.obs ? " – " + r.obs : ""), respostas_anteriores: arrayUnion(r), resposta: null,
+      email_enviado_em: null, token: codigo(),
+      historico: arrayUnion({ em: iso, por: S.nome, acao: `Nova data aprovada: ${dataBR(p.data)} ${p.hora} → ${dataBR(nd)} ${nh} (pedido do cliente: ${r.motivo || ""}). Novo e-mail de confirmação será enviado.` }) });
+    fechar("mNova"); toast(`✔ Reagendada para ${dataBR(nd)} ${esc(nh)}. ${quandoEmail(nd, nh)}.`);
+  } catch (e) { $("#mNovaE").textContent = "Não gravou: " + msgErro(e); }
+};
+function abrirHistorico(id) {
+  const p = S.prev.find(x => x.id === id); if (!p) return;
+  $("#mHistT").textContent = `Histórico · ${p.cliente} · TAG ${p.tag}`;
+  const h = [...(p.historico || [])].sort((a, b) => String(a.em).localeCompare(String(b.em)));
+  $("#mHistC").innerHTML = h.length ? h.map(x => `<div style="border-left:3px solid var(--line);padding-left:8px"><span class="mono livre">${new Date(x.em).toLocaleString("pt-BR")}</span> · <b>${esc(x.por || "")}</b><br>${esc(x.acao || "")}</div>`).join("")
+    : '<p class="vazio">Sem histórico (preventiva criada antes da rev. 16).</p>';
+  $("#mHist").classList.add("on");
+}
+
+// ================================================================ rev. 19: aba Equipamentos (cadastro mestre no Firebase)
+S.eq = []; S.eqF = { q: "", tipo: "", sit: "", rev: false };
+const normTag = t => { const x = String(t || "").toUpperCase().replace(/[\s\-._/]+/g, ""); const m = x.match(/^([A-Z]+)0*(\d+)([A-Z]*)$/); return m ? m[1] + Number(m[2]) + m[3] : x; };
+const normNome = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9 ]/g, " ").replace(/\b(LTDA|S A|SA|EIRELI|ME|EPP|DO|DA|DE|BRASIL)\b/g, " ").replace(/\s+/g, " ").trim();
+async function carregarEquip() {
+  try {
+    const q = await getDocs(collection(db, "equipamentos")); const l = [];
+    q.forEach(d => l.push({ id: d.id, ...d.data() }));
+    S.eq = l.sort((a, b) => String(a.tag).localeCompare(String(b.tag), "pt-BR", { numeric: true }));
+    if (!S.clientes.length) await carregarClientes();
+    render();
+  } catch (e) { S.eqErro = "Não leu o cadastro de equipamentos: " + msgErro(e); render(); }
+}
+const nomeCli = cod => { const c = (S.clientes || []).find(x => x.cod === cod); return c ? c.nome : cod === "FF" ? "FF Logística (base)" : (cod || ""); };
+function duplicadas() {
+  const g = {}; S.eq.filter(e => !/^Inativo/i.test(e.situacao || "") && e.identificacao !== "setor Abbott").forEach(e => { const k = normTag(e.tag); if (k) (g[k] = g[k] || []).push(e); });
+  return Object.values(g).filter(l => l.length > 1);
+}
+function filtraEq() {
+  const f = S.eqF, q = normNome(f.q);
+  return S.eq.filter(e => (!f.tipo || e.tipo === f.tipo) && (!f.sit || e.situacao === f.sit) && (!f.rev || (e.revisar || []).length)
+    && (!q || normNome([e.tag, e.tipo, e.marca, e.modelo, e.serie, nomeCli(e.cod_cliente), e.cliente, e.ident_cliente].join(" ")).includes(q)));
+}
+function linhasEq() {
+  const l = filtraEq(), max = 300;
+  if (!l.length) return '<p class="vazio">Nenhum equipamento com esses filtros.</p>';
+  return `<div class="rel" style="margin:4px 0">${l.length} equipamento(s)${l.length > max ? ` · mostrando os ${max} primeiros – refine a busca` : ""}</div>
+    <table><thead><tr><th>TAG</th><th>Tipo</th><th>Marca / modelo / série</th><th>Cliente</th><th>Situação</th><th>Câmara fria</th><th>Início ciclo</th><th>A revisar</th><th></th></tr></thead><tbody>${
+    l.slice(0, max).map(e => `<tr><td class="mono"><b>${esc(e.tag)}</b>${e.ident_cliente ? `<br><span class="livre">${esc(e.ident_cliente)}</span>` : ""}</td><td>${esc(e.tipo || "–")}</td>
+      <td>${esc([e.marca, e.modelo].filter(Boolean).join(" ") || "–")}<br><span class="livre">${esc(e.serie || "")}</span></td>
+      <td>${esc(nomeCli(e.cod_cliente) || e.cliente || "–")}<br><span class="livre">${esc(e.propriedade || "")}</span></td><td>${esc(e.situacao || "–")}</td>
+      <td>${e.camara_fria ? '<span class="pst warn">❄ Sim</span>' : "Não"}</td><td class="mono">${e.inicio_ciclo ? dataBR(e.inicio_ciclo) : "–"}</td>
+      <td>${(e.revisar || []).map(x => `<span class="chip alerta" style="display:inline-block;margin:1px 0">${esc(x)}</span>`).join("<br>") || '<span class="ok">ok</span>'}</td>
+      <td><button class="btn sm" data-eqed="${esc(e.id)}">Editar</button></td></tr>`).join("")}</tbody></table>`;
+}
+function telaEquip() {
+  if (S.eqErro) return `<p class="erro">${esc(S.eqErro)}</p>`;
+  if (!S.eq.length) return '<p class="vazio">Carregando o cadastro de equipamentos…</p>';
+  const tipos = [...new Set(S.eq.map(e => e.tipo).filter(Boolean))].sort(), sits = [...new Set(S.eq.map(e => e.situacao).filter(Boolean))].sort();
+  const dup = duplicadas(), nRev = S.eq.filter(e => (e.revisar || []).length).length, f = S.eqF;
+  return (dup.length ? `<div class="al warn" style="margin-bottom:10px"><span class="ic">TAG repetida</span><span class="tx">${dup.map(g => `<b>${esc(normTag(g[0].tag))}</b>: ${g.map(e => `${esc(e.tag)} (${esc([e.marca, e.modelo, e.serie].filter(Boolean).join(" "))}) <button class="btn sm" data-eqed="${esc(e.id)}">Editar</button>`).join(" · ")}`).join("<br>")}<br><span class="livre">Decida qual é o certo: corrija a TAG do outro ou inative o equipamento que não existe mais.</span></span></div>` : "")
+    + `<div class="form" style="grid-template-columns:2fr 1fr 1fr auto">
+      <label>Buscar (TAG, cliente, marca, série…)<input id="eqQ" value="${esc(f.q)}" placeholder="Ex.: M148, BBA, Still"></label>
+      <label>Tipo<select id="eqTipo"><option value="">Todos</option>${tipos.map(t => `<option ${t === f.tipo ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>
+      <label>Situação<select id="eqSit"><option value="">Todas</option>${sits.map(t => `<option ${t === f.sit ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>
+      <label style="display:flex;gap:6px;align-items:center;font-weight:600"><input type="checkbox" id="eqRev" ${f.rev ? "checked" : ""}> Só "a revisar" (${nRev})</label></div>
+    <div id="eqLista">${linhasEq()}</div>`;
+}
+function atualizaListaEq() { const el = $("#eqLista"); if (el) el.innerHTML = linhasEq(); }
+let eqId = null;
+function abrirEquip(id) {
+  const e = S.eq.find(x => x.id === id); if (!e) return; eqId = id;
+  $("#mEqT").textContent = `Equipamento ${e.tag}`;
+  $("#mEqSub").innerHTML = `${esc(e.tipo || "")} · ${esc([e.marca, e.modelo].filter(Boolean).join(" "))} · série ${esc(e.serie || "–")}<br>${(e.revisar || []).length ? "A revisar: " + e.revisar.map(esc).join(" · ") : "Sem pendências de cadastro."}`;
+  $("#eqTag").value = e.tag || "";
+  $("#eqCli").innerHTML = (S.clientes || []).map(c => `<option value="${esc(c.rot)}">`).join("");
+  const c = (S.clientes || []).find(x => x.cod === e.cod_cliente); $("#eqCliIn").value = c ? c.rot : (e.cod_cliente === "FF" ? "" : "");
+  $("#eqSitE").value = e.situacao || ""; $("#eqCf").checked = !!e.camara_fria; $("#eqIni").value = e.inicio_ciclo || ""; $("#eqObs").value = "";
+  $("#eqRevOk").checked = false; $("#eqRevOk").closest("label").hidden = !(e.revisar || []).length; $("#mEqE").textContent = "";
+  $("#mEq").classList.add("on");
+}
+$("#mEqOk").onclick = async () => {
+  const e = S.eq.find(x => x.id === eqId); if (!e) return;
+  const err = t => { $("#mEqE").textContent = t; };
+  const tag = $("#eqTag").value.trim().toUpperCase(), cliTxt = $("#eqCliIn").value.trim(), sit = $("#eqSitE").value;
+  const cli = (S.clientes || []).find(x => x.rot === cliTxt);
+  if (!tag) return err("A TAG não pode ficar vazia.");
+  if (cliTxt && !cli) return err("Escolha o cliente na lista (ou deixe vazio para a base FF).");
+  const novo = { tag, situacao: sit, camara_fria: $("#eqCf").checked, inicio_ciclo: $("#eqIni").value || "",
+    cod_cliente: cli ? cli.cod : (sit === "Na base FF" ? "FF" : e.cod_cliente || ""), cliente: cli ? cli.nome : (sit === "Na base FF" ? "" : e.cliente || "") };
+  const mud = Object.keys(novo).filter(k => String(novo[k] ?? "") !== String(e[k] ?? ""));
+  const revOk = $("#eqRevOk").checked, obs = $("#eqObs").value.trim();
+  if (!mud.length && !revOk && !obs) return err("Nada foi alterado.");
+  if (mud.includes("tag") && S.eq.some(x => x.id !== e.id && normTag(x.tag) === normTag(tag) && !/^Inativo/i.test(x.situacao || ""))) {
+    if (!confirm(`A TAG ${tag} já existe em outro equipamento ativo. Gravar mesmo assim?`)) return;
+  }
+  const rot = { tag: "TAG", situacao: "situação", camara_fria: "câmara fria", inicio_ciclo: "início do ciclo", cod_cliente: "cliente", cliente: "nome do cliente" };
+  const acao = [mud.filter(k => k !== "cliente").map(k => `${rot[k]}: ${k === "camara_fria" ? (e[k] ? "Sim" : "Não") : (k === "cod_cliente" ? nomeCli(e[k]) : e[k] || "–")} → ${k === "camara_fria" ? (novo[k] ? "Sim" : "Não") : (k === "cod_cliente" ? nomeCli(novo[k]) : novo[k] || "–")}`).join(" · "),
+    revOk ? "cadastro revisado" : "", obs ? "obs.: " + obs : ""].filter(Boolean).join(" · ");
+  const upd = { ...Object.fromEntries(mud.map(k => [k, novo[k]])), historico: arrayUnion({ em: agora().toISOString(), por: S.nome, acao }) };
+  if (revOk) { upd.revisar = []; upd.revisado_em = serverTimestamp(); upd.revisado_por = S.nome; }
+  try { await updateDoc(doc(db, "equipamentos", e.id), upd); Object.assign(e, novo, revOk ? { revisar: [] } : {}); fechar("mEq"); toast(`✔ ${esc(tag)} gravado.`); render(); }
+  catch (x) { err("Não gravou: " + msgErro(x)); }
+};
+// alerta: TAG da SS cadastrada para outro cliente
+function tagDeOutroCliente(s) {
+  if (!S.eq.length || !s.tag || s.tag === "NI00" || !s.cliente) return "";
+  const e = S.eq.find(x => normTag(x.tag) === normTag(s.tag) && !/^Inativo/i.test(x.situacao || "")); if (!e) return "";
+  const dono = nomeCli(e.cod_cliente) || e.cliente || ""; if (!dono) return "";
+  const a = normNome(dono), b = normNome(s.cliente);
+  if (!a || !b || a.includes(b) || b.includes(a)) return "";
+  return dono;
+}
+
+// ================================================================ rev. 23: almoço dos técnicos (regras 09/10 e 31/10)
+// botão no celular a partir das 12:00 · bloco único de 60 min · no minuto 61 volta sozinho · quem não apertou até 14:30 → automático 14:30–15:30
+const ALM_MIN = 60, ALM_AUTO_H = 14, ALM_AUTO_M = 30;
+S.alm = new Map(); S.almDia = "";
+function ouvirAlmocos() {
+  const dia = hojeISO(); S.almDia = dia;
+  const u = onSnapshot(query(collection(db, "almocos"), where("data", "==", dia)), snap => {
+    S.alm = new Map(); snap.forEach(d => { const a = d.data(); S.alm.set(a.tecnico_id, { id: d.id, ...a }); }); render();
+  }, e => { S.almErro = "Sem acesso aos almoços: publique as regras v7 no Firebase."; render(); });
+  S.unsub.push(u);
+}
+function almocoDe(tid) {
+  const a = S.alm.get(tid); if (!a) return null;
+  const ini = dt(a.inicio); if (!ini) return null;
+  const fim = new Date(ini.getTime() + ALM_MIN * 60000);
+  return { ...a, ini, fim, ativo: agora() >= ini && agora() < fim };
+}
+function chipAlmoco(t) {
+  const a = almocoDe(t.id); if (!a) return "";
+  const cien = a.tipo === "automatico" ? (a.ciente_em ? " · ciente ✔" : " · ⚠ sem ciência") : "";
+  if (a.ativo) return `<span class="st" style="background:#6B7785">🍽 Almoço até ${hm(a.fim)} · faltam ${Math.max(1, Math.ceil((a.fim - agora()) / 60000))} min${a.tipo === "automatico" ? " (automático" + cien + ")" : ""}</span>`;
+  return `<span class="livre">almoço ${hm(a.ini)}–${hm(a.fim)}${a.tipo === "automatico" ? " (auto)" : ""}</span>`;
+}
+async function almocoAutomatico() {
+  const n = agora(); if (n.getHours() * 60 + n.getMinutes() < ALM_AUTO_H * 60 + ALM_AUTO_M || !S.user) return;
+  if (S.almDia !== hojeISO()) return;                          // virou o dia: espera o novo listener
+  const ini = new Date(n); ini.setHours(ALM_AUTO_H, ALM_AUTO_M, 0, 0);
+  for (const t of S.tec.filter(x => x.ativo !== false && !S.alm.has(x.id))) {
+    const ref = doc(db, "almocos", `${t.id}_${hojeISO()}`);
+    try {
+      await runTransaction(db, async tr => {
+        if ((await tr.get(ref)).exists()) return;              // outro painel já criou
+        tr.set(ref, { tecnico_id: t.id, tecnico_nome: t.nome || "", data: hojeISO(), inicio: Timestamp.fromDate(ini), tipo: "automatico",
+          registrado_por: S.nome, registrado_em: serverTimestamp() });
+      });
+    } catch (e) { console.warn("almoço automático", t.nome, e); }
+  }
+}
+// ocorrência no intervalo: qualquer tentativa de acionar o técnico em almoço fica registrada (prova de que o intervalo foi respeitado)
+async function ocorrenciaAlmoco(t, a, tipo, ss) {
+  try {
+    await addDoc(collection(db, "ocorrencias_almoco"), { tecnico_id: t.id, tecnico_nome: t.nome || "", data: hojeISO(), almoco_id: a.id || "",
+      almoco_inicio: Timestamp.fromDate(a.ini), almoco_fim: Timestamp.fromDate(a.fim), tipo, ss: ss ? String(ss.numero || ss.id) : "",
+      por: S.nome || "", bloqueado: true, em: serverTimestamp(),
+      texto: `${tipo === "designar" ? "Tentativa de designar SS" : "Tentativa de alterar SS"} durante o intervalo de almoço (${hm(a.ini)}–${hm(a.fim)}) – técnico indisponível para o trabalho. Ação bloqueada pelo sistema.` });
+  } catch (e) { console.warn("ocorrência almoço", e); }
+}
+function linkAlmoco(t) {
+  if (!t.chave_almoco) return "";
+  // o celular do técnico precisa de um endereço na internet: no PC (file://) usa o GitHub Pages da FF
+  const base = location.protocol.startsWith("http") ? location.href.replace(/[?#].*$/, "").replace(/[^/]*$/, "") : "https://lcslobo41-blip.github.io/atendimento/";
+  return `${base}almoco_TESTE.html?t=${encodeURIComponent(t.id)}&k=${encodeURIComponent(t.chave_almoco)}&n=${encodeURIComponent((t.nome || "").split(" ")[0])}`;
+}
+async function gerarLinkAlmoco(tid) {
+  const t = S.tec.find(x => x.id === tid); if (!t) return;
+  let k = t.chave_almoco;
+  if (!k) { k = codigo() + codigo(); try { await updateDoc(doc(db, "tecnicos", tid), { chave_almoco: k }); t.chave_almoco = k; } catch (e) { toast("Não gravou: " + esc(msgErro(e))); return; } }
+  const url = linkAlmoco(t), f = foneWa(t.celular);
+  const msg = `${(t.nome || "").split(" ")[0]}, este é o seu botão de almoço (salve na tela inicial do celular): ${url}`;
+  toast(`Link do almoço de <b>${esc(t.nome)}</b>:<br><small style="word-break:break-all">${esc(url)}</small><br>` +
+    (f ? `<a class="btn sm go" href="https://wa.me/${f}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">📲 Enviar no WhatsApp</a>` : "<small>Cadastre o celular para enviar pelo WhatsApp.</small>"));
+}
+let ALM_REL = null, ALM_OC = null;
+async function carregarOcorrencias(dia) {
+  if (ALM_OC && ALM_OC.dia === dia) return;
+  ALM_OC = { dia, l: null };
+  getDocs(query(collection(db, "ocorrencias_almoco"), where("data", "==", dia))).then(sn => { ALM_OC = { dia, l: sn.docs.map(d => d.data()) }; render(); })
+    .catch(e => { ALM_OC = { dia, l: [], erro: msgErro(e) }; render(); });
+}
+// espelho mensal de intervalos (para ciência/assinatura do técnico)
+async function espelhoMensal() {
+  const mes = ($("#almMes") && $("#almMes").value) || hojeISO().slice(0, 7), tid = $("#almTec") && $("#almTec").value;
+  const ts = S.tec.filter(t => t.ativo !== false && (!tid || t.id === tid));
+  const ini = mes + "-01", fim = mes + "-31";
+  let al = [], oc = [];
+  try {
+    al = (await getDocs(query(collection(db, "almocos"), where("data", ">=", ini), where("data", "<=", fim)))).docs.map(d => d.data());
+    oc = (await getDocs(query(collection(db, "ocorrencias_almoco"), where("data", ">=", ini), where("data", "<=", fim)))).docs.map(d => d.data());
+  } catch (e) { toast("Não consegui ler: " + esc(msgErro(e))); return; }
+  const [a, m] = mes.split("-"), nomeMes = new Date(+a, +m - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const pag = ts.map(t => {
+    const l = al.filter(x => x.tecnico_id === t.id).sort((x, y) => x.data.localeCompare(y.data));
+    const o = oc.filter(x => x.tecnico_id === t.id);
+    const lin = l.map(x => { const i = dt(x.inicio), f = i && new Date(i.getTime() + ALM_MIN * 60000), no = o.filter(y => y.data === x.data).length;
+      return `<tr><td>${dataBR(x.data)}</td><td>${i ? hm(i) : ""}</td><td>${f ? hm(f) : ""}</td><td>60 min</td><td>${x.tipo === "automatico" ? "Automático" + (x.ciente_em ? ` – ciente ${hm(dt(x.ciente_em))}` : " – sem ciência") : "Botão do técnico"}</td><td>${no ? no + " tentativa(s) bloqueada(s)" : "–"}</td></tr>`; }).join("");
+    return `<section class="pg"><h2>Espelho de intervalos de almoço – ${esc(nomeMes)}</h2>
+      <p><b>FF Logística</b> · Colaborador: <b>${esc(t.nome)}</b> · Emitido em ${new Date().toLocaleString("pt-BR")}</p>
+      <table><thead><tr><th>Data</th><th>Início</th><th>Volta</th><th>Duração</th><th>Registro</th><th>Ocorrências no intervalo</th></tr></thead><tbody>${lin || '<tr><td colspan="6">Sem registros no mês.</td></tr>'}</tbody></table>
+      <p style="font-size:12px">Registros com hora do servidor (Google Firebase), não alteráveis. Durante o intervalo o colaborador fica bloqueado para designação/alteração de atendimentos; tentativas são bloqueadas e registradas.</p>
+      <p style="margin-top:50px">Declaro que usufruí dos intervalos de almoço acima registrados.</p>
+      <p style="margin-top:40px">______________________________________<br>${esc(t.nome)} – data ___/___/______</p></section>`;
+  }).join("");
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Espelho intervalos ${esc(mes)}</title><style>
+    body{font:13px/1.4 system-ui,sans-serif;color:#14202C;margin:24px}h2{font-size:17px;margin:0 0 6px}table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #999;padding:4px 6px;text-align:left}th{background:#EEF1F5}.pg{page-break-after:always}
+    @media print{button{display:none}}</style></head><body><button onclick="print()" style="margin-bottom:12px;padding:8px 14px">Imprimir / salvar PDF</button>${pag}</body></html>`);
+  w.document.close();
+}
+async function telaAlmoco() {
+  const dia = S.almRelDia || hojeISO();
+  if (dia === hojeISO()) ALM_REL = { dia, l: [...S.alm.values()] };
+  else if (!ALM_REL || ALM_REL.dia !== dia) {
+    ALM_REL = { dia, l: null };
+    getDocs(query(collection(db, "almocos"), where("data", "==", dia))).then(sn => { ALM_REL = { dia, l: sn.docs.map(d => d.data()) }; render(); })
+      .catch(e => { ALM_REL = { dia, l: [], erro: msgErro(e) }; render(); });
+  }
+  const l = ALM_REL.l;
+  carregarOcorrencias(dia);
+  const ocs = (ALM_OC && ALM_OC.dia === dia && ALM_OC.l) || [];
+  const lin = S.tec.filter(t => t.ativo !== false).map(t => {
+    const a = (l || []).find(x => x.tecnico_id === t.id), ini = a && dt(a.inicio), fim = ini && new Date(ini.getTime() + ALM_MIN * 60000);
+    return `<tr><td>${esc(t.nome)}</td><td>${t.placa ? esc(t.placa) : '<span class="livre">sem veículo</span>'}</td><td class="mono">${ini ? hm(ini) : "–"}</td><td class="mono">${fim ? hm(fim) : "–"}</td>
+      <td>${a ? (a.tipo === "automatico" ? '<span class="pst warn">Automático (não apertou até 14:30)</span>' : '<span class="pst ok">Botão do técnico</span>') : '<span class="livre">sem registro</span>'}</td>
+      <td>${!a ? "" : a.tipo !== "automatico" ? '<span class="livre">próprio técnico</span>' : a.ciente_em ? `<span class="pst ok">Ciente ${hm(dt(a.ciente_em))}</span>` : '<span class="pst crit">⚠ Sem ciência</span>'}</td>
+      <td>${(n => n ? `<span class="pst crit">${n} tentativa(s) bloqueada(s)</span>` : '<span class="livre">nenhuma</span>')(ocs.filter(o => o.tecnico_id === t.id).length)}</td>
+      <td><button class="btn sm" data-almlink="${esc(t.id)}">🔗 Link do botão</button></td></tr>`;
+  }).join("");
+  const ocDet = ocs.length ? `<div class="subh">Ocorrências no intervalo (${ocs.length})</div><table><thead><tr><th>Hora</th><th>Técnico</th><th>O que</th><th>SS</th><th>Por</th></tr></thead><tbody>${
+    ocs.map(o => `<tr><td class="mono">${dt(o.em) ? hm(dt(o.em)) : ""}</td><td>${esc(o.tecnico_nome)}</td><td>${esc(o.texto)}</td><td class="mono">${esc(o.ss)}</td><td>${esc(o.por)}</td></tr>`).join("")}</tbody></table>` : "";
+  return `<div class="form"><label>Dia<input id="almDia" type="date" value="${dia}"></label>
+      <label>Espelho mensal<input id="almMes" type="month" value="${hojeISO().slice(0, 7)}"></label>
+      <label>Técnico<select id="almTec"><option value="">Todos</option>${S.tec.filter(t => t.ativo !== false).map(t => `<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join("")}</select></label>
+      <button class="btn pri" id="almEsp">🖨 Gerar espelho (ciência do técnico)</button></div>
+    <div class="rel" style="margin:6px 0 10px">Botão no celular a partir das 12:00 · 60 min fixos · no minuto 61 o técnico volta sozinho a disponível · quem não apertar até 14:30 entra em almoço automático (14:30–15:30).</div>
+    ${ALM_REL.erro ? `<p class="erro">${esc(ALM_REL.erro)}</p>` : l === null ? '<p class="vazio">Carregando…</p>' :
+      `<table><thead><tr><th>Técnico</th><th>Veículo</th><th>Início</th><th>Volta</th><th>Como</th><th>Ciência</th><th>Ocorrências no intervalo</th><th></th></tr></thead><tbody>${lin}</tbody></table>` + ocDet}`;
+}
+
+// técnicos: se as regras ainda não permitirem, tenta de novo sozinho a cada 10 s (sem precisar recarregar a página)
+function ouvirTecnicos() {
+  const u = onSnapshot(collection(db, "tecnicos"), snap => {
+    S.tecErro = ""; S.tec = []; snap.forEach(d => S.tec.push({ id: d.id, ...d.data() }));
+    S.tec.sort((a, b) => String(a.nome).localeCompare(String(b.nome), "pt-BR")); render();
+  }, e => {
+    S.tecErro = "Sem acesso ao cadastro de técnicos: publique as regras v2 no Firebase (Firestore › Regras). Tentando de novo em 10 s…";
+    render(); setTimeout(() => { if (S.user) ouvirTecnicos(); }, 10000);
+  });
+  S.unsub.push(u);
+}
+
+// ---------------------------------------------------------------- gravação (SS + acompanhamento do cliente)
+async function mudar(s, campos, acao, acomp) {
+  const b = writeBatch(db);
+  b.update(doc(db, "ss", s.id), { ...campos, historico: arrayUnion({ em: agora().toISOString(), por: S.nome, acao }) });
+  if (s.acompanhar && acomp) b.update(doc(db, "acompanhar", s.acompanhar), acomp);
+  try { await b.commit(); return true; }
+  catch (e) { toast("Não gravou: " + esc(msgErro(e))); return false; }
+}
+function tecPublico(t) { return t ? { nome: t.nome || "", veiculo: t.veiculo || "", placa: t.placa || "", celular: t.celular || "" } : null; }
+
+// pedido = SS abertas juntas pelo mesmo cliente (vários equipamentos no mesmo formulário)
+function chavePedido(s) {
+  if (s.pedido) return "p:" + s.pedido;
+  const t = dt(s.criado_em);   // SS antigas sem "pedido": mesmo cliente + mesmo celular + até 5 min
+  return t ? "c:" + (s.cliente || "") + "|" + (s.contato_celular || "") + "|" + Math.floor(t.getTime() / 300000) : "s:" + s.id;
+}
+function doPedido(s, filtro) {
+  const k = chavePedido(s);
+  return [...S.ss.values()].filter(x => chavePedido(x) === k && (!filtro || filtro(x))).sort((a, b) => a.numero - b.numero);
+}
+async function mudarLote(lista, campos, acao, acomp) {
+  const b = writeBatch(db), quando = agora().toISOString();
+  lista.forEach(s => {
+    b.update(doc(db, "ss", s.id), { ...campos, historico: arrayUnion({ em: quando, por: S.nome, acao }) });
+    if (s.acompanhar && acomp) b.update(doc(db, "acompanhar", s.acompanhar), acomp);
+  });
+  try { await b.commit(); return true; } catch (e) { toast("Não gravou: " + esc(msgErro(e))); return false; }
+}
+async function designar(id, tid) {
+  const s = S.ss.get(id), t = S.tec.find(x => x.id === tid); if (!s || !t) return;
+  { const a = almocoDe(tid); if (a && a.ativo) { ocorrenciaAlmoco(t, a, "designar", s); toast(`${esc(t.nome)} está em almoço até ${hm(a.fim)} – indisponível para o trabalho.<br><small>Tentativa registrada.</small>`); return; } }
+  const lote = document.getElementById("desLote") && document.getElementById("desLote").checked
+    ? doPedido(s, x => x.status === "recebida") : [s];
+  const iso = agora().toISOString(), base = Date.now();
+  let ok = true;
+  for (let i = 0; i < lote.length && ok; i++)
+    ok = await mudarLote([lote[i]], { status: "designada", tecnico_id: t.id, tecnico_nome: t.nome, ordem_tec: base + i, "etapas.designada": iso },
+      `Designada para ${t.nome}${lote.length > 1 ? " (pedido em lote)" : ""}`, { status: "designada", tecnico: tecPublico(t), "etapas.designada": iso });
+  if (ok) { fechar("mDes"); toast(`${lote.length > 1 ? lote.length + " SS do pedido (" + lote.map(x => fmt(x.numero)).join(", ") + ")" : "SS " + fmt(s.numero)} designada(s) para <b>${esc(t.nome)}</b>.<br><small>Lembre de designar também no Sismetro.</small><br>${botaoAviso(lote, t)} ${botaoRota(lote, t)}`); }
+}
+// rev. 16: no "A caminho" o ADM informa de onde o técnico sai (residência, base, outro cliente) → animação do cliente
+let oriId = null;
+const ROT_ORI = { residencia: "da residência", base: "da base FF", cliente: "de outro cliente", rua: "de outro local" };
+function confirmarSaida(ori) { const id = oriId; oriId = null; fechar("mOri"); if (id) avancar(id, ori); }
+async function avancar(id, origem) {
+  const s = S.ss.get(id); if (!s || !PROX[s.status]) return;
+  { const t = S.tec.find(x => x.id === s.tecnico_id), a = t && almocoDe(t.id);
+    if (a && a.ativo) { ocorrenciaAlmoco(t, a, "alterar_ss", s); toast(`${esc(t.nome)} está em almoço até ${hm(a.fim)} – indisponível para o trabalho.<br><small>Tentativa registrada; a SS retoma no minuto 61.</small>`); return; } }
+  const [novo, txt] = PROX[s.status];
+  if (novo === "concluida") { abrirHorimetro(s); return; }   // horímetro obrigatório para encerrar
+  if (novo === "a_caminho" && !origem) {
+    oriId = id; $("#mOriSub").textContent = `SS ${fmt(s.numero)} · ${s.tecnico_nome || ""} · ${s.cliente || ""}`; $("#mOri").classList.add("on"); return;
+  }
+  const iso = agora().toISOString();
+  const campos = { status: novo, [`etapas.${novo}`]: iso };
+  const pub = { status: novo, [`etapas.${novo}`]: iso };
+  if (origem) { campos.origem_saida = origem; pub.origem_saida = origem; pub.cliente = s.cliente || ""; }
+  if (novo === "concluida") campos.encerrada_em = serverTimestamp();
+  // mesma visita: A caminho e Chegou valem para todas as SS do pedido com o mesmo técnico;
+  // Iniciar atendimento e Concluir são por equipamento (selecionados individualmente)
+  const lote = ["a_caminho", "chegou"].includes(novo) ? doPedido(s, x => x.tecnico_id === s.tecnico_id && x.status === s.status) : [s];
+  if (await mudarLote(lote, campos, txt + (origem ? ` (saindo ${ROT_ORI[origem]})` : "") + (lote.length > 1 ? " (pedido em lote)" : ""), pub) && lote.length > 1)
+    toast(`${txt}: ${lote.length} SS do pedido (${lote.map(x => fmt(x.numero)).join(", ")}).`);
+}
+async function devolver(id) {
+  const s = S.ss.get(id); if (!s) return;
+  if (!confirm(`Devolver a SS ${fmt(s.numero)} para a fila "Aguardando técnico"?`)) return;
+  await mudar(s, { status: "recebida", tecnico_id: null, tecnico_nome: null }, "Devolvida à fila", { status: "recebida", tecnico: null });
+}
+// rev. 17: liberação (financeiro ou diretor) exige o motivo
+let libId = null;
+function liberar(id) {
+  const s = S.ss.get(id); if (!s) return; libId = id;
+  $("#mLibSub").textContent = `SS ${fmt(s.numero)} · ${s.cliente || ""} · aguardando liberação há ${dur(minDesde(dt(s.criado_em)))}`;
+  $("#mLibQuem").value = ""; $("#mLibTx").value = ""; $("#mLibE").textContent = "";
+  $("#mLib").classList.add("on"); $("#mLibQuem").focus();
+}
+$("#mLibOk").onclick = async () => {
+  const s = S.ss.get(libId); if (!s) return;
+  const quem = $("#mLibQuem").value, mo = $("#mLibTx").value.trim();
+  if (!quem) { $("#mLibE").textContent = "Informe quem autorizou (financeiro ou diretor)."; return; }
+  if (mo.length < 10) { $("#mLibE").textContent = "Descreva o motivo da liberação (mínimo 10 caracteres)."; return; }
+  const iso = agora().toISOString();
+  if (await mudar(s, { status: "recebida", "etapas.liberada": iso, liberacao: { por: quem, motivo: mo, em: iso, registrado_por: S.nome } },
+    `Liberada (${quem}) – motivo: ${mo}`, { status: "recebida", "etapas.liberada": iso })) {
+    fechar("mLib"); toast(`SS ${fmt(s.numero)} liberada. Avise o cliente: "Solicitação liberada, SS nº ${fmt(s.numero)} registrada".`);
+  }
+};
+async function mover(id, dir) {
+  const l = filaOrdenada(), i = l.findIndex(s => s.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= l.length) return;
+  const a = l[i], b = l[j], oa = ordem(a), ob = ordem(b);
+  const w = writeBatch(db);
+  w.update(doc(db, "ss", a.id), { ordem: ob === oa ? ob + dir : ob });
+  w.update(doc(db, "ss", b.id), { ordem: oa });
+  try { await w.commit(); } catch (e) { toast("Não gravou: " + esc(msgErro(e))); }
+}
+async function salvarRef(id, v) {
+  const s = S.ss.get(id) || hoje().get(id); if (!s) return;
+  v = v.replace(/\D/g, "");
+  if ((s.ref_sismetro || "") === v) return;
+  if (await mudar(s, { ref_sismetro: v || null }, v ? `Ref. Sismetro ${v}` : "Ref. Sismetro apagada", null)) toast(v ? `Ref. Sismetro ${esc(v)} gravada.` : "Ref. Sismetro apagada.");
+}
+async function resolverAlerta(id) {
+  const s = S.ss.get(id); if (!s) return;
+  await mudar(s, { alertas_resolvidos: true }, "Alerta resolvido", null);
+}
+async function corrigirTag(id) {
+  const s = S.ss.get(id); if (!s) return;
+  const el = document.getElementById("fx" + id), v = (el ? el.value : "").trim().toUpperCase().replace(/\s+/g, "");
+  if (!v) { toast("Digite a TAG correta antes de clicar em Corrigir TAG."); if (el) el.focus(); return; }
+  if (v === String(s.tag || "").toUpperCase()) { toast("A TAG não foi alterada. Para manter a TAG informada pelo cliente, use <b>Resolvido</b>."); if (el) el.focus(); return; }
+  if (el) el.blur();
+  if (await mudar(s, { tag: v, tag_anterior: s.tag || "", alertas_resolvidos: true }, `TAG corrigida: ${s.tag || "-"} → ${v}`, { tag: v }))
+    toast(`SS ${fmt(s.numero)}: TAG corrigida para <b class="mono">${esc(v)}</b> (mesmo nº de SS).<br><small>Corrija também no Sismetro.</small>`);
+}
+// ---------------------------------------------------------------- horímetro (obrigatório para concluir)
+const SALTO_MAX = 300;     // horas desde a última leitura que pedem confirmação
+let horId = null, HOR_N = 3;
+// rev. 17: horímetro por PEDIDO – só serve à preventiva de empilhadeira.
+// Pedido com SS de empilhadeira → só ela pede; bateria/carregador/carrinho concluem sem horímetro.
+// Pedido sem empilhadeira → pede no 1º equipamento concluído. Sempre TODAS as empilhadeiras do cliente (cadastro).
+const ehEmp = x => /empilhadeira/i.test(x.equipamento || "");
+let HOR_TAGS = [], HOR_DISP = null;
+async function empilhadeirasDoCliente(s) {
+  const tags = [...new Set(doPedido(s).concat([s]).map(x => limpaTag(x.tag)).filter(t => t && t !== "NI00"))];
+  let cod = "", local = "", doCliente = false;
+  for (const t of tags) {
+    try { const q = await getDocs(query(collection(db, "equipamentos"), where("tag", "==", t))); q.forEach(d => { if (!cod && d.data().cod_cliente) { cod = d.data().cod_cliente; local = d.data().cod_local || ""; doCliente = /^Cliente/i.test(d.data().propriedade || ""); } }); } catch (e) { }
+    if (cod) break;
+  }
+  if (!cod) return { cod: "", lista: [] };
+  if (cod === "FF") return { cod, lista: [] };   // base FF (interno): só a empilhadeira do atendimento – as da base estão em estoque
+  if (doCliente) return { cod, lista: [] };       // Abbott (técnico residente, ativos do cliente): só a do atendimento
+  try {
+    const q = await getDocs(query(collection(db, "equipamentos"), where("cod_cliente", "==", cod)));
+    const l = []; q.forEach(d => { const e = d.data(); if (/empilhadeira/i.test(e.tipo || "") && e.tag && e.situacao !== "A completar" && !/^Inativo/i.test(e.situacao || "") && (!local || !e.cod_local || e.cod_local === local)) l.push(limpaTag(e.tag)); });
+    return { cod, lista: [...new Set(l)].sort() };
+  } catch (e) { return { cod, lista: [] }; }
+}
+async function abrirHorimetro(s) {
+  horId = s.id; HOR_DISP = null;
+  const ped = doPedido(s);
+  // dispensado: pedido já teve o horímetro registrado, ou o pedido tem SS de empilhadeira e esta não é ela
+  if (s.horimetro_pedido_ok || (!ehEmp(s) && ped.some(x => x.id !== s.id && ehEmp(x)))) {
+    HOR_DISP = s.horimetro_pedido_ok ? "horímetro já registrado neste pedido" : "horímetro é registrado na SS da empilhadeira do pedido";
+    if (!confirm(`Concluir a SS ${fmt(s.numero)} (${s.equipamento || ""} ${s.tag || ""})?\n\nNão é preciso horímetro: ${HOR_DISP}.`)) return;
+    return concluirSemHorimetro(s, HOR_DISP);
+  }
+  $("#mHorSub").textContent = `SS ${fmt(s.numero)} · ${s.cliente || ""} · ${s.equipamento || ""} ${s.tag || ""} · buscando as empilhadeiras do cliente…`;
+  $("#mHorLin").innerHTML = '<div class="rel">Carregando…</div>'; $("#mHorE").textContent = ""; $("#mHor").classList.add("on");
+  const { cod, lista } = await empilhadeirasDoCliente(s);
+  const propria = ehEmp(s) && limpaTag(s.tag) && limpaTag(s.tag) !== "NI00" ? limpaTag(s.tag) : "";
+  HOR_TAGS = [...new Set([propria, ...lista].filter(Boolean))];
+  HOR_N = HOR_TAGS.length + 1;                      // + 1 linha livre (empilhadeira fora do cadastro)
+  if (!HOR_TAGS.length) HOR_N = 3;                  // cliente sem cadastro: 3 linhas livres como antes
+  $("#mHorSub").textContent = `SS ${fmt(s.numero)} · ${s.cliente || ""} · ${s.equipamento || ""} ${s.tag || ""}`
+    + (HOR_TAGS.length ? ` · ${HOR_TAGS.length} empilhadeira(s) do cliente${cod ? " (" + cod + ")" : ""} no cadastro: informe o horímetro de TODAS` : " · cliente sem empilhadeiras no cadastro: informe a(s) TAG(s)");
+  $("#mHorLin").innerHTML = Array.from({ length: HOR_N }, (_, i) => {
+    const fixa = HOR_TAGS[i] || "", obrig = !!fixa || (!HOR_TAGS.length && i === 0);
+    return `<div style="display:grid;gap:4px;border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+    <div class="refs" style="color:var(--ink)"><b style="min-width:22px">${i + 1}.</b>
+    TAG <input id="hTag${i}" value="${esc(fixa)}" ${fixa ? "readonly" : ""} placeholder="${obrig ? "obrigatório" : "outra (opcional)"}" style="width:90px;text-transform:uppercase${fixa ? ";background:var(--sunk)" : ""}">
+    Horímetro <input id="hHor${i}" inputmode="decimal" placeholder="${obrig ? "obrigatório" : "opcional"}" style="width:110px"> h
+    <span class="livre" id="hAnt${i}"></span></div>
+    <label class="refs"><input type="checkbox" id="hNl${i}" style="width:auto"> Não foi possível ler</label>
+    <input id="hMo${i}" placeholder="Motivo (obrigatório): ex. equipamento fora do local, painel apagado" hidden style="font:inherit;padding:5px 8px;border:1.5px solid var(--line);border-radius:6px"></div>`;
+  }).join("");
+  $("#mHorSem").closest("label").hidden = HOR_TAGS.length > 0; $("#mHorSem").checked = false;
+  $("#mHorConf").checked = false;
+  for (let i = 0; i < HOR_N; i++) {
+    $("#hTag" + i).addEventListener("change", () => mostrarAnterior(i));
+    $("#hNl" + i).addEventListener("change", e => { $("#hMo" + i).hidden = !e.target.checked; $("#hHor" + i).disabled = e.target.checked; if (e.target.checked) { $("#hHor" + i).value = ""; $("#hMo" + i).focus(); } });
+    if ($("#hTag" + i).value) mostrarAnterior(i);
+  }
+  $(HOR_TAGS.length ? "#hHor0" : "#hTag0").focus();
+}
+async function concluirSemHorimetro(s, motivo) {
+  const iso = agora().toISOString(), b = writeBatch(db);
+  b.update(doc(db, "ss", s.id), { status: "concluida", "etapas.concluida": iso, encerrada_em: serverTimestamp(), horimetro_dispensado: motivo,
+    historico: arrayUnion({ em: iso, por: S.nome, acao: "Concluída · sem horímetro (" + motivo + ")" }) });
+  if (s.acompanhar) b.update(doc(db, "acompanhar", s.acompanhar), { status: "concluida", "etapas.concluida": iso });
+  try { await b.commit(); toast(`SS ${fmt(s.numero)} concluída (${motivo}).`); } catch (e) { toast("Não gravou: " + esc(msgErro(e))); }
+}
+const limpaTag = t => String(t || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+async function leituraAnterior(tag) {
+  try { const d = await getDoc(doc(db, "horimetros", tag)); return d.exists() ? d.data() : null; } catch (e) { return null; }
+}
+async function mostrarAnterior(i) {
+  const tag = limpaTag($("#hTag" + i).value), el = $("#hAnt" + i); if (!tag) { el.textContent = ""; return; }
+  const a = await leituraAnterior(tag);
+  el.textContent = a && a.ultimo != null ? `última: ${String(a.ultimo).replace(".", ",")} h em ${new Date(a.em).toLocaleDateString("pt-BR")}` : "sem leitura anterior";
+}
+$("#mHorOk").onclick = async () => {
+  const s = S.ss.get(horId); if (!s) return;
+  const err = t => { $("#mHorE").textContent = t; };
+  const lidas = [], sem = $("#mHorSem").checked;
+  const naoLidas = [];
+  for (let i = 0; i < HOR_N && !sem; i++) {
+    const tag = limpaTag($("#hTag" + i).value), hs = $("#hHor" + i).value.trim().replace(/\./g, "").replace(",", ".");
+    if ($("#hNl" + i).checked) {
+      const mo = $("#hMo" + i).value.trim();
+      if (!tag) return err(`Linha ${i + 1}: informe a TAG da empilhadeira que não foi possível ler.`);
+      if (mo.length < 5) return err(`Linha ${i + 1}: descreva o motivo de não ter lido o horímetro.`);
+      if (lidas.some(x => x.tag === tag) || naoLidas.some(x => x.tag === tag)) return err(`A TAG ${tag} foi informada duas vezes.`);
+      naoLidas.push({ tag, motivo: mo }); continue;
+    }
+    if (HOR_TAGS[i] && !hs) return err(`${HOR_TAGS[i]}: informe o horímetro ou marque "Não foi possível ler".`);
+    if (!tag && !hs) { if (i === 0 && !HOR_TAGS.length) return err("Informe a TAG e o horímetro da empilhadeira (linha 1 é obrigatória)."); continue; }
+    const h = parseFloat(hs);
+    if (!tag || !(h >= 0)) return err(`Linha ${i + 1}: preencha a TAG e o horímetro (só números).`);
+    if (lidas.some(x => x.tag === tag)) return err(`A TAG ${tag} foi informada duas vezes.`);
+    lidas.push({ tag, horas: h });
+  }
+  const iso = agora().toISOString(), avisos = [];
+  for (const l of lidas) {
+    const a = await leituraAnterior(l.tag);
+    if (a && a.ultimo != null) {
+      if (l.horas < a.ultimo) return err(`${l.tag}: ${l.horas} h é MENOR que a última leitura (${a.ultimo} h). Confira o horímetro.`);
+      if (l.horas - a.ultimo > SALTO_MAX) avisos.push(`${l.tag}: +${Math.round(l.horas - a.ultimo)} h desde a última leitura`);
+      l.anterior = a.ultimo; l.anterior_em = a.em;
+    }
+  }
+  if (avisos.length && !$("#mHorConf").checked) return err("Salto grande: " + avisos.join(" · ") + ". Confira e marque \"Confirmo as leituras\".");
+  const b = writeBatch(db);
+  b.update(doc(db, "ss", s.id), { status: "concluida", "etapas.concluida": iso, encerrada_em: serverTimestamp(),
+    horimetros: lidas.map(l => ({ tag: l.tag, horas: l.horas, em: iso })).concat(naoLidas.map(n => ({ tag: n.tag, horas: null, nao_lido: true, motivo: n.motivo, em: iso }))), sem_empilhadeira: sem,
+    historico: arrayUnion({ em: iso, por: S.nome, acao: "Concluída · " + (sem ? "sem empilhadeira no cliente" : "horímetro " + lidas.map(l => `${l.tag} ${l.horas} h`).concat(naoLidas.map(n => `${n.tag} não lido (${n.motivo})`)).join(", ")) }) });
+  if (s.acompanhar) b.update(doc(db, "acompanhar", s.acompanhar), { status: "concluida", "etapas.concluida": iso });
+  lidas.forEach(l => b.set(doc(db, "horimetros", l.tag), {
+    tag: l.tag, ultimo: l.horas, em: iso, ss: s.numero, origem: "técnico",
+    leituras: arrayUnion({ horas: l.horas, em: iso, ss: s.numero, por: S.nome })
+  }, { merge: true }));
+  doPedido(s).filter(x => x.id !== s.id).forEach(x => b.update(doc(db, "ss", x.id), { horimetro_pedido_ok: true }));
+  naoLidas.forEach(n => b.set(doc(db, "horimetros", n.tag), { tag: n.tag, ler_proxima_visita: true, nao_lido: { em: iso, ss: s.numero, motivo: n.motivo, por: S.nome } }, { merge: true }));
+  try { await b.commit(); $("#mHor").classList.remove("on"); toast(`SS ${fmt(s.numero)} concluída · ${sem ? "sem empilhadeira" : "horímetro registrado (" + lidas.map(l => l.tag + " " + l.horas + " h").join(", ") + ")"}.`); }
+  catch (e) { err("Não gravou: " + msgErro(e) + " (publique as regras v3)"); }
+};
+// rev. 13: horímetro na aba Finalizadas hoje
+const fmtH = h => Number(h).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+function horCel(s) {
+  if (s.sem_empilhadeira) return '<span class="livre">sem empilhadeira</span>';
+  const l = s.horimetros || [];
+  return l.length ? l.map(h => h.nao_lido ? `<span class="mono">${esc(h.tag)}</span> <span class="livre">· não lido (${esc(h.motivo || "")})</span>` : `<span class="mono">${esc(h.tag)} · ${fmtH(h.horas)} h</span>`).join("<br>") : '<span class="livre">–</span>';
+}
+let cancId = null;
+function abrirCancelar(id) {
+  const s = S.ss.get(id); if (!s) return; cancId = id;
+  $("#mMotSub").textContent = `SS ${fmt(s.numero)} · ${s.cliente || ""}`; $("#mMotTx").value = ""; $("#mMotE").textContent = "";
+  $("#mMot").classList.add("on"); $("#mMotTx").focus();
+}
+$("#mMotOk").onclick = async () => {
+  const s = S.ss.get(cancId), mo = $("#mMotTx").value.trim(); if (!s) return;
+  if (mo.length < 5) { $("#mMotE").textContent = "Descreva o motivo (mínimo 5 caracteres)."; return; }
+  const iso = agora().toISOString();
+  if (await mudar(s, { status: "cancelada", motivo_cancelamento: mo, encerrada_em: serverTimestamp(), "etapas.cancelada": iso },
+    "Cancelada: " + mo, { status: "cancelada", "etapas.cancelada": iso })) { fechar("mMot"); toast(`SS ${fmt(s.numero)} cancelada.`); }
+};
+async function excluirTeste(id) {
+  const s = S.ss.get(id) || hoje().get(id); if (!s || !s.teste) return;
+  if (!confirm(`Excluir de vez a SS de TESTE ${fmt(s.numero)}?`)) return;
+  try {
+    const b = writeBatch(db); b.delete(doc(db, "ss", s.id)); if (s.acompanhar) b.delete(doc(db, "acompanhar", s.acompanhar));
+    await b.commit(); S.hojeC.delete(s.id); S.hojeE.delete(s.id); render(); toast(`SS de teste ${fmt(s.numero)} excluída.`);
+  } catch (e) { toast("Não excluiu: " + esc(msgErro(e))); }
+}
+
+// SS de teste (simula o formulário do cliente)
+const AMOSTRAS = [
+  { cliente: "PAX SUPERMERCADO LTDA", equipamento: "Bateria", tag: "B012", parado: true, categoria: "", descricao: "Bateria não segura carga, empilhadeira para no meio do turno.", midia: "2 fotos" },
+  { cliente: "REAL CARNES INDUSTRIA E COMERCIO", equipamento: "Carregador", tag: "C06", parado: false, categoria: "", descricao: "Carregador desarma após 10 minutos.", midia: "1 vídeo" },
+  { cliente: "TRANSPORTES ALFA", equipamento: "Empilhadeira", tag: "NI00", parado: true, categoria: "Hidráulico", descricao: "Garfo desce sozinho com carga.", midia: "3 fotos", alertas: ["TAG M418 informada pelo cliente não encontrada – SS no NI00"] },
+  { cliente: "SUPERMERCADO REAL DE NITEROI", equipamento: "Carrinho de baterias", tag: "CB04", parado: false, categoria: "", descricao: "Roda do carrinho travando.", midia: "1 foto" },
+  { cliente: "MAGISFOOD", equipamento: "Empilhadeira a combustão", tag: "M73", parado: true, categoria: "Mecânico", descricao: "Motor falhando e soltando fumaça.", midia: "", restrito: true }
+];
+let nAm = 0;
+function codigo() {
+  const a = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  return Array.from(crypto.getRandomValues(new Uint32Array(24)), x => a[x % a.length]).join("");
+}
+const RESTRITOS = [
+  { cliente: "MAGISFOOD", equipamento: "Empilhadeira a combustão", tag: "M73", parado: true, categoria: "Mecânico", descricao: "Motor falhando e soltando fumaça.", midia: "", restrito: true },
+  { cliente: "BOMFRIOS ITABORAI", equipamento: "Bateria", tag: "B21", parado: false, categoria: "", descricao: "Bateria esquentando na carga.", midia: "2 fotos", restrito: true }
+];
+let nR = 0;
+$("#bTeste").onclick = () => criarTeste(AMOSTRAS[nAm++ % AMOSTRAS.length]);
+$("#bTesteR").onclick = () => criarTeste(RESTRITOS[nR++ % RESTRITOS.length]);
+async function criarTeste(am) {
+  const cod = codigo();
+  const status = am.restrito ? "aguardando_financeiro" : "recebida";
+  try {
+    const n = await runTransaction(db, async t => {
+      const cRef = doc(db, "contadores", "ss"), c = await t.get(cRef);
+      const n = c.data().ultimo + 1;
+      t.set(doc(db, "ss", String(n)), {
+        numero: n, status, teste: true, criado_em: serverTimestamp(), ordem: n,
+        cliente: "TESTE - " + am.cliente, contato_nome: "Cliente teste", contato_celular: "(21) 90000-0000",
+        equipamento: am.equipamento, tag: am.tag, parado: am.parado, categoria: am.categoria,
+        descricao: am.descricao, midia: am.midia, alertas: am.alertas || [], acompanhar: cod,
+        etapas: { recebida: agora().toISOString() }, historico: [{ em: agora().toISOString(), por: "formulário (teste)", acao: "SS criada" }]
+      });
+      t.set(doc(db, "acompanhar", cod), { ss: n, status, teste: true, equipamento: am.equipamento, tag: am.tag, etapas: { recebida: agora().toISOString() } });
+      t.update(cRef, { ultimo: n });
+      return n;
+    });
+    toast(`SS de teste ${fmt(n)} criada${am.restrito ? " (cliente restrito → aguardando financeiro)" : ""}.`);
+  } catch (e) { toast("Não criou: " + esc(msgErro(e))); }
+}
+
+// técnicos (cadastro)
+async function salvarTec() {
+  const d = { nome: $("#tNome").value.trim(), celular: $("#tCel").value.trim(), veiculo: $("#tVeic").value.trim(), placa: $("#tPlaca").value.trim().toUpperCase(), ativo: true };
+  if (!d.nome) { toast("Informe o nome do técnico."); return; }
+  const bt = $("#tSalvar"); if (bt) { bt.disabled = true; bt.textContent = "Gravando…"; }
+  try { await addDoc(collection(db, "tecnicos"), d); toast(`✔ Técnico ${esc(d.nome)} cadastrado.`); ["#tNome", "#tCel", "#tVeic", "#tPlaca"].forEach(s => { if ($(s)) $(s).value = ""; }); }
+  catch (e) { toast("✘ Não gravou o técnico: " + esc(msgErro(e)) + "<br>Publique as regras v2 no Firebase (Firestore › Regras)."); }
+  if (bt) { bt.disabled = false; bt.textContent = "Cadastrar técnico"; }
+  render();
+}
+async function alternarTec(id) {
+  const t = S.tec.find(x => x.id === id); if (!t) return;
+  try { await updateDoc(doc(db, "tecnicos", id), { ativo: t.ativo === false }); } catch (e) { toast("Não gravou: " + esc(msgErro(e))); }
+}
+
+// ---------------------------------------------------------------- render
+const ordem = s => typeof s.ordem === "number" ? s.ordem : s.numero;
+function filaOrdenada() { return [...S.ss.values()].filter(s => s.status === "recebida").sort((a, b) => ordem(a) - ordem(b) || a.numero - b.numero); }
+function doTec(tid) { return [...S.ss.values()].filter(s => s.tecnico_id === tid && EM_CAMPO.includes(s.status)).sort((a, b) => (EM_CAMPO.indexOf(b.status) - EM_CAMPO.indexOf(a.status)) || ((a.ordem_tec || 0) - (b.ordem_tec || 0))); }
+const NOVA_MIN = 10;   // SS recebida há menos de 10 min ganha destaque "NOVA"
+const ehNova = s => s.status === "recebida" && minDesde(dt(s.criado_em)) < NOVA_MIN;
+function chips(s) {
+  const np = doPedido(s).length;
+  return `<div class="chips">${np > 1 ? `<span class="chip alerta">📦 Pedido com ${np} equipamentos</span>` : ""}${ehNova(s) ? '<span class="chip nova">NOVA</span>' : ""}${s.teste ? '<span class="chip teste">TESTE</span>' : ""}
+    <span class="chip">${esc(s.equipamento || "Equipamento")}</span>${s.tag ? `<span class="chip tag">${esc(s.tag)}</span>` : ""}
+    ${s.parado ? '<span class="chip parado">Parado</span>' : '<span class="chip">Funcionando</span>'}
+    ${s.categoria ? `<span class="chip">${esc(s.categoria)}</span>` : ""}${s.midia ? `<span class="chip">📷 ${esc(s.midia)}</span>` : ""}
+    ${(s.alertas || []).length && !s.alertas_resolvidos ? `<button class="chip alerta" data-goal="${esc(s.id)}" style="cursor:pointer">${motivoAlerta(s)}</button>` : ""}
+    ${tagDeOutroCliente(s) ? `<span class="chip parado" title="No cadastro, a TAG ${esc(s.tag)} é de ${esc(tagDeOutroCliente(s))}">⚠ TAG cadastrada em ${esc(tagDeOutroCliente(s))}</span>` : ""}${chipTempo(s)}</div>`;
+}
+// rev. 17: tempo de SS aberta (aguardando técnico) – normal / amarelo / vermelho piscando; equipamento parado alerta antes
+const LIM_TEMPO = { normal: [30, 60], parado: [15, 30] };
+function nivelTempo(s) {
+  if (s.status !== "recebida") return 0;
+  const m = minDesde(dt(s.criado_em)), [am, vm] = LIM_TEMPO[s.parado ? "parado" : "normal"];
+  return m >= vm ? 2 : m >= am ? 1 : 0;
+}
+function chipTempo(s) {
+  const n = nivelTempo(s), m = minDesde(dt(s.criado_em));
+  const txt = s.status === "recebida" ? `⏱ aberta há ${dur(m)}${n === 2 ? " · DESIGNAR JÁ" : ""}` : `⏱ ${dur(m)}`;
+  return `<span class="chip tempo t${n}" title="Normal: amarelo 30 min, vermelho 1 h · Parado: amarelo 15 min, vermelho 30 min">${txt}</span>`;
+}
+function motivoAlerta(s) {
+  const a = (s.alertas || []).join(" "), m = [];
+  if (/TAG|série/i.test(a)) m.push("⚠ TAG não encontrada");
+  if (/empresa/i.test(a)) m.push("⚠ Empresa diferente");
+  return m.length ? m.join(" · ") : "⚠ Conferir";
+}
+function refBox(s) {
+  return `<div class="refs">Ref. Sismetro <input inputmode="numeric" data-ref="${esc(s.id)}" value="${esc(s.ref_sismetro || "")}" placeholder="nº no Sismetro">
+    ${s.ref_sismetro ? `<a class="btn sm" href="${linkSismetro(s.ref_sismetro)}" target="_blank" rel="noopener">Abrir no Sismetro ↗</a>` : ""}</div>`;
+}
+function cardSS(s, i, total) {
+  const fin = s.status === "aguardando_financeiro";
+  return `<article class="ss ${fin ? "fin" : ""} ${ehNova(s) ? "nova" : ""} ${nivelTempo(s) === 2 ? "atraso" : ""}" id="ss${esc(s.id)}">
+    <div class="r1">${fin ? "" : `<span class="ord">${i + 1}</span>`}<span class="ssn">SS ${fmt(s.numero)}</span><span class="emp" title="${esc(s.cliente)}">${esc(s.cliente)}</span>
+      ${fin ? "" : `<span class="mv"><button data-up="${esc(s.id)}" aria-label="Subir prioridade" ${i === 0 ? "disabled" : ""}>▲</button><button data-dn="${esc(s.id)}" aria-label="Descer prioridade" ${i === total - 1 ? "disabled" : ""}>▼</button></span>`}</div>
+    ${chips(s)}
+    <div class="rel">${esc(s.descricao)}</div>
+    <div class="contato">${esc(s.contato_nome || "")}${s.contato_celular ? " · " + esc(s.contato_celular) : ""}${s.contato_email ? " · " + esc(s.contato_email) : ""}</div>
+    ${refBox(s)}
+    <div class="acts">${fin ? `<button class="btn sm go" data-lib="${esc(s.id)}">Liberar (financeiro)</button>` : `<button class="btn sm pri" data-des="${esc(s.id)}">Designar técnico</button>`}
+      <button class="btn sm" data-canc="${esc(s.id)}">Cancelar</button>${linkCliente(s)}</div>
+  </article>`;
+}
+function hoje() { return new Map([...S.hojeC, ...S.hojeE]); }
+function digitando() { const a = document.activeElement; return !!(a && ((a.dataset && (a.dataset.ref || a.dataset.fx || a.dataset.dst || a.dataset.tedit)) || ["tNome", "tCel", "tVeic", "tPlaca", "mMotTx", "pCli", "pTag", "pData", "pHora", "pNome", "pEmail", "eqQ"].includes(a.id))); }
+function render() {
+  if (!S.user) return;
+  if (digitando()) { S.pend = true; return; } // não apaga o que está sendo digitado
+  S.pend = false;
+  const todas = [...S.ss.values()], fila = filaOrdenada(), finan = todas.filter(s => s.status === "aguardando_financeiro");
+  const ativos = S.tec.filter(t => t.ativo !== false);
+  const fins = [...hoje().values()].filter(s => s.status === "concluida" && dt(s.encerrada_em) && dt(s.encerrada_em) >= hojeIni());
+  const livres = ativos.filter(t => !doTec(t.id).length && !(almocoDe(t.id) || {}).ativo).length;
+  $("#kpis").innerHTML = [
+    [fila.length, "Aguardando técnico", fila.length > 3], [finan.length, "Aguardando financeiro", finan.length > 0],
+    [todas.filter(s => EM_CAMPO.includes(s.status)).length, "Em campo"], [fins.length, "Finalizadas hoje"], [livres, "Técnicos livres"]
+  ].map(([v, l, a]) => `<div class="kpi ${a ? "alert" : ""}"><b class="mono">${v}</b><span>${l}</span></div>`).join("");
+
+  const al = todas.filter(s => (s.alertas || []).length && !s.alertas_resolvidos);
+  $("#alerts").innerHTML = al.map(s => `<div class="al crit" id="al${esc(s.id)}"><span class="ic">Atenção</span>
+    <span class="tx">SS ${fmt(s.numero)} · ${esc(s.cliente)} · ${s.alertas.map(esc).join(" · ")}</span>
+    <span class="refs">Cliente informou: <b class="mono">${esc(s.tag || "-")}</b> · TAG correta <input id="fx${esc(s.id)}" data-fx="${esc(s.id)}" value="${esc(s.tag && s.tag !== "NI00" ? s.tag : "")}" placeholder="ex.: M148" style="text-transform:uppercase;width:100px"></span>
+    <button class="btn sm pri" data-fix="${esc(s.id)}">Corrigir TAG</button>
+    ${s.ref_sismetro ? `<a class="btn sm" href="${linkSismetro(s.ref_sismetro)}" target="_blank" rel="noopener">Corrigir no Sismetro ↗</a>` : ""}
+    <button class="btn sm" data-res="${esc(s.id)}">Resolvido</button></div>`).join("")
+    + finan.map(s => `<div class="al warn"><span class="ic">Financeiro</span><span class="tx">SS ${fmt(s.numero)} · ${esc(s.cliente)} aguardando liberação há ${dur(minDesde(dt(s.criado_em)))}${minDesde(dt(s.criado_em)) >= 1440 ? " · <b>passou de 24 h: escalar à diretoria</b>" : ""}.</span>
+    <button class="btn sm go" data-lib="${esc(s.id)}">Liberar</button><button class="btn sm" data-canc="${esc(s.id)}">Cancelar</button></div>`).join("");
+
+  $("#filaN").textContent = `${fila.length} SS · ordem = prioridade`;
+  $("#mnFila").textContent = fila.length || "";
+  $("#fila").innerHTML = (fila.length ? fila.map((s, i) => cardSS(s, i, fila.length)).join("") : '<p class="vazio">Nenhuma SS aguardando técnico.</p>')
+    + (finan.length ? `<div class="subh">Aguardando financeiro (${finan.length})</div>` + finan.map(s => cardSS(s, 0, 1)).join("") : "");
+
+  $("#tecN").textContent = `${ativos.length} técnico(s) · ${livres} livre(s)`;
+  $("#tecs").innerHTML = ativos.length ? ativos.map(t => {
+    const l = doTec(t.id), st = l.length ? l[0].status : "livre", alm = almocoDe(t.id);
+    return `<article class="tec${alm && alm.ativo ? " almoco" : ""}"><div class="r1"><span class="av" style="background:${COR[st]}">${esc((t.nome || "?")[0])}</span>
+      <span class="nm">${esc(t.nome)}<small>${esc(t.veiculo || "")} ${esc(t.placa || "")}</small></span>
+      ${alm && alm.ativo ? chipAlmoco(t) : `<span class="st" style="background:${COR[st]}">${st === "livre" ? "Livre" : ROT[st]}</span>`}</div>
+      ${alm && alm.ativo && l.length ? '<div class="refs">⏸ SS pausada durante o almoço – retoma sozinha no minuto 61</div>' : alm && !alm.ativo ? `<div class="refs">${chipAlmoco(t)}</div>` : ""}
+      <div class="fila">${l.length ? l.map((s, i) => `<div class="it ${i === 0 ? "ativa" : ""}">
+          <div class="l"><span class="k">${i === 0 ? "ATIVA" : (i + 1) + "ª"}</span><span class="x">SS ${fmt(s.numero)} · ${esc(s.cliente)} · ${esc(s.tag || "")}</span></div>
+          <div class="acts"><span class="livre">${ROT[s.status]}</span>
+            <button class="btn sm ${s.status === "em_atendimento" ? "go" : "pri"}" data-av="${esc(s.id)}">${PROX[s.status][1]}</button>
+            <button class="btn sm" data-dev="${esc(s.id)}">Devolver à fila</button>${linkCliente(s)}${s.status === "designada" ? botaoAviso([s], t) + botaoRota(doPedido(s, x => x.tecnico_id === s.tecnico_id && x.status === "designada"), t) : ""}</div>${destinoBox(s)}</div>`).join("")
+        : '<span class="livre">Sem SS · Disponível</span>'}</div></article>`;
+  }).join("") : (S.tecErro ? `<p class="erro">${esc(S.tecErro)}</p>` : '<p class="vazio">Nenhum técnico cadastrado. Use a aba <b>Cadastro de técnicos</b>, embaixo.</p>');
+  tabela(fins);
+}
+function hojeIni() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+function tabela(fins) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.t === S.aba));
+  let h = "";
+  if (S.aba === "exec") {
+    const l = [...S.ss.values()].filter(s => EM_CAMPO.includes(s.status)).sort((a, b) => a.numero - b.numero);
+    h = l.length ? `<table><thead><tr><th>SS</th><th>Empresa</th><th>Equipamento</th><th>Técnico</th><th>Situação</th><th>Ref. Sismetro</th></tr></thead><tbody>${
+      l.map(s => `<tr><td class="mono">${fmt(s.numero)}</td><td>${esc(s.cliente)}</td><td>${esc(s.equipamento)} ${esc(s.tag || "")}</td><td>${esc(s.tecnico_nome || "")}</td><td>${ROT[s.status]}</td><td>${refBox(s)}</td></tr>`).join("")}</tbody></table>`
+      : '<p class="vazio">Nenhuma SS em campo.</p>';
+  } else if (S.aba === "fin") {
+    const l = (fins || []).sort((a, b) => b.numero - a.numero);
+    h = l.length ? `<table><thead><tr><th>SS</th><th>Empresa</th><th>Equipamento</th><th>Técnico</th><th>Concluída</th><th>Horímetro</th><th>Ref. Sismetro</th><th></th></tr></thead><tbody>${
+      l.map(s => `<tr><td class="mono">${fmt(s.numero)}</td><td>${esc(s.cliente)}</td><td>${esc(s.equipamento)} ${esc(s.tag || "")}</td><td>${esc(s.tecnico_nome || "")}</td><td class="mono">${hm(dt(s.encerrada_em))}</td><td>${horCel(s)}</td><td>${refBox(s)}</td>
+        <td></td></tr>`).join("")}</tbody></table>`
+      : '<p class="vazio">Nenhuma SS concluída hoje.</p>';
+  } else if (S.aba === "ped") {
+    const l = [...S.hojeC.values()].sort((a, b) => b.numero - a.numero);
+    h = l.length ? `<table><thead><tr><th>Hora</th><th>SS</th><th>Empresa</th><th>Contato</th><th>Equipamento</th><th>Status</th></tr></thead><tbody>${
+      l.map(s => `<tr><td class="mono">${hm(dt(s.criado_em))}</td><td class="mono">${fmt(s.numero)}</td><td>${esc(s.cliente)}</td><td>${esc(s.contato_nome || "")} ${esc(s.contato_celular || "")}</td><td>${esc(s.equipamento)} ${esc(s.tag || "")}</td><td>${ROT[s.status] || esc(s.status)}${s.status === "cancelada" && s.motivo_cancelamento ? ": " + esc(s.motivo_cancelamento) : ""}</td></tr>`).join("")}</tbody></table>`
+      : '<p class="vazio">Nenhum pedido recebido hoje.</p>';
+  } else if (S.aba === "eq") {
+    h = telaEquip();
+  } else if (S.aba === "alm") {
+    h = "<div id=\"almBox\"></div>"; telaAlmoco().then(x => { const el = document.getElementById("almBox"); if (el) el.innerHTML = x; });
+  } else if (S.aba === "prev") {
+    const hj = hojeISO();
+    const PEND = ["sem_resposta", "recusada", "sem_contato"];
+    const l = S.prev.filter(p => p.status !== "cancelada" && (p.data >= hj || PEND.includes(p.status) || (p.status === "confirmada" && !p.ss_numero)))
+      .sort((a, b) => (PEND.includes(b.status) - PEND.includes(a.status)) || (a.data + a.hora).localeCompare(b.data + b.hora));
+    h = `<div class="form">
+        <label>Cliente<input id="pCli" list="dlCli" placeholder="digite e escolha na lista" autocomplete="off"><datalist id="dlCli">${(S.clientes || []).map(c => `<option value="${esc(c.rot)}">`).join("")}</datalist></label>
+        <label>TAG<select id="pTag"><option value="">${S.prevCli ? (S.prevTags.length ? "Escolha a empilhadeira…" : "cliente sem empilhadeira no cadastro") : "escolha o cliente antes"}</option>${(S.prevTags || []).map(t => `<option>${esc(t)}</option>`).join("")}</select></label>
+        <label>Data<input id="pData" type="date" min="${hj}"></label>
+        <label>Hora<input id="pHora" type="time"></label>
+        <label>Contato<input id="pNome" placeholder="nome"></label>
+        <label>E-mail do cliente<input id="pEmail" type="email" placeholder="contato@cliente.com.br"></label>
+        <button class="btn pri" id="pSalvar">Agendar preventiva</button></div>
+      <div class="rel" id="pInfo"></div><div class="rel" id="pHor"></div><div class="erro" id="pAviso"></div>
+      <div style="margin:6px 0"><a class="btn sm pri" href="relatorio_preventivas_TESTE.html" target="_blank" rel="noopener">📊 Relatório de Preventivas (ISO 9001)</a></div>
+      <div class="rel" style="margin:6px 0 10px">O e-mail sai ${DIAS_ANTES} dias antes (a partir das 7h) com os botões Sim/Não; o cliente tem 24 h para responder. Mesmo dia ou menos de 12 h → sem e-mail, registrar ligação. Sem resposta → ligar e registrar aqui. 3 tentativas sem sucesso → e-mail à supervisão.</div>`
+      + (S.prevErro ? `<p class="erro">${esc(S.prevErro)}</p>` : l.length ? `<table><thead><tr><th>Data</th><th>Hora</th><th>Cliente</th><th>TAG</th><th>Contato</th><th>Situação</th><th></th></tr></thead><tbody>${
+        l.map(p => `<tr><td class="mono">${dataBR(p.data)}</td><td class="mono">${esc(p.hora)}</td><td>${esc(p.cliente)}</td><td class="mono">${esc(p.tag)}</td><td>${esc(p.contato_nome || "")}<br><span class="livre">${esc(p.email)}</span></td>
+            <td>${statusPrev(p)}</td><td><div class="acts">${acoesPrev(p)}</div></td></tr>`).join("")}</tbody></table>`
+        : '<p class="vazio">Nenhuma preventiva agendada.</p>');
+  } else {
+    h = `<div class="form">
+        <label>Nome<input id="tNome" placeholder="Ex.: André"></label>
+        <label>Celular da empresa<input id="tCel" placeholder="(21) 9xxxx-xxxx"></label>
+        <label>Veículo<input id="tVeic" placeholder="Strada"></label>
+        <label>Placa<input id="tPlaca" placeholder="ABC1D23"></label>
+        <button class="btn pri" id="tSalvar">Cadastrar técnico</button></div>`
+      + (S.tec.length ? `<table><thead><tr><th>Técnico</th><th>Celular</th><th>Veículo</th><th>Placa</th><th>Situação</th><th></th></tr></thead><tbody>${
+        S.tec.map(t => `<tr><td>${esc(t.nome)}</td>${["celular", "veiculo", "placa"].map(c => `<td><input data-tedit="${esc(t.id)}|${c}" value="${esc(t[c] || "")}" style="width:${c === "celular" ? 150 : 110}px;padding:4px 6px;border:1.5px solid var(--line);border-radius:6px;font:inherit${c === "placa" ? ";text-transform:uppercase;font-family:var(--mono)" : ""}"></td>`).join("")}
+          <td>${t.ativo === false ? "Inativo" : '<span class="ok">Ativo</span>'}</td><td><button class="btn sm" data-tat="${esc(t.id)}">${t.ativo === false ? "Reativar" : "Inativar"}</button></td></tr>`).join("")}</tbody></table>`
+        : '<p class="vazio">Nenhum técnico cadastrado ainda.</p>');
+  }
+  // preserva o que já foi digitado nos formulários quando a tela atualiza
+  const keep = {}; ["pCli", "pTag", "pData", "pHora", "pNome", "pEmail", "tNome", "tCel", "tVeic", "tPlaca", "almMes", "almTec"].forEach(id => { const el = document.getElementById(id); if (el) keep[id] = el.value; });
+  const info = { pInfo: $("#pInfo") ? $("#pInfo").textContent : "", pHor: $("#pHor") ? $("#pHor").textContent : "" };
+  $("#tabela").innerHTML = h;
+  Object.entries(keep).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
+  Object.entries(info).forEach(([id, v]) => { const el = document.getElementById(id); if (el && v) el.textContent = v; });
+}
+
+// modal designar
+function abrirDesignar(id) {
+  const s = S.ss.get(id); if (!s) return;
+  const ativos = S.tec.filter(t => t.ativo !== false);
+  $("#mDesT").textContent = `Designar técnico · SS ${fmt(s.numero)}`;
+  const ped = doPedido(s, x => x.status === "recebida");
+  $("#mDesSub").innerHTML = esc(`${s.cliente || ""} · ${s.equipamento || ""} ${s.tag || ""}`) + (ped.length > 1
+    ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;color:var(--ink);font-weight:600"><input type="checkbox" id="desLote" checked>
+       Designar as ${ped.length} SS deste pedido juntas: ${ped.map(x => `${fmt(x.numero)} (${esc(x.equipamento || "")} ${esc(x.tag || "")})`).join(", ")}</label>` : "");
+  $("#mDesLista").innerHTML = ativos.length ? ativos.map(t => {
+    const l = doTec(t.id), alm = almocoDe(t.id);
+    if (alm && alm.ativo) return `<div class="opt" style="opacity:.6"><span class="nm"><b>${esc(t.nome)}</b><small>🍽 Em almoço até ${hm(alm.fim)} – não pode ser acionado</small></span>
+      <button class="btn sm" disabled>Em almoço</button></div>`;
+    return `<div class="opt"><span class="nm"><b>${esc(t.nome)}</b><small>${l.length ? `${ROT[l[0].status]} · ${l.length} SS com ele (entra como ${l.length + 1}ª)` : "Livre · entra como ATIVA"}</small></span>
+      <button class="btn sm ${l.length ? "" : "go"}" data-desp="${esc(s.id)}|${esc(t.id)}">Designar</button></div>`;
+  }).join("") : '<p class="vazio">Cadastre os técnicos primeiro (aba Cadastro de técnicos).</p>';
+  $("#mDes").classList.add("on");
+}
+function fechar(id) { $("#" + id).classList.remove("on"); }
+
+// ---------------------------------------------------------------- eventos
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const d = b.dataset;
+  if (d.des) abrirDesignar(d.des);
+  else if (d.desp) { const [s, t] = d.desp.split("|"); designar(s, t); }
+  else if (d.up) mover(d.up, -1);
+  else if (d.dn) mover(d.dn, +1);
+  else if (d.av) avancar(d.av);
+  else if (d.dev) devolver(d.dev);
+  else if (d.lib) liberar(d.lib);
+  else if (d.canc) abrirCancelar(d.canc);
+  else if (d.res) resolverAlerta(d.res);
+  else if (d.ir) { const el = S.ultNova && document.getElementById("ss" + S.ultNova.id); document.body.dataset.pane = "fila"; if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); $("#toast").hidden = true; }
+  else if (d.fix) corrigirTag(d.fix);
+  else if (d.goal) { const el = document.getElementById("al" + d.goal); if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.style.outline = "3px solid var(--safety)"; setTimeout(() => el.style.outline = "", 2000); const i = document.getElementById("fx" + d.goal); if (i) i.focus(); } }
+  else if (d.tat) alternarTec(d.tat);
+  else if (d.almlink) gerarLinkAlmoco(d.almlink);
+  else if (d.dsave) salvarDestino(d.dsave);
+  else if (d.fechar) fechar(d.fechar);
+  else if (d.t) { S.aba = d.t; render(); }
+  else if (d.p) { document.body.dataset.pane = d.p; document.querySelectorAll(".mnav button").forEach(x => x.classList.toggle("on", x === b)); window.scrollTo({ top: 0 }); }
+  else if (b.id === "tSalvar") salvarTec();
+  else if (b.id === "pSalvar") salvarPrev();
+  else if (b.id === "almEsp") espelhoMensal();
+  else if (d.pvc) acaoPrev(d.pvc, "canc");
+  else if (d.pvr) acaoPrev(d.pvr, "reenv");
+  else if (d.pvl) abrirLigacao(d.pvl);
+  else if (d.pvn) abrirNovaData(d.pvn);
+  else if (d.pvh) abrirHistorico(d.pvh);
+  else if (d.eqed) abrirEquip(d.eqed);
+  else if (d.ori) confirmarSaida(d.ori);
+  else if (b.id === "bSom") { S.som = !S.som; b.classList.toggle("on", S.som); b.setAttribute("aria-pressed", S.som); b.textContent = S.som ? "🔔 Som ligado" : "🔔 Som desligado"; bip(); }
+});
+document.addEventListener("change", e => {
+  if (e.target.dataset && e.target.dataset.ref) salvarRef(e.target.dataset.ref, e.target.value);
+  if (e.target.dataset && e.target.dataset.tedit) salvarTecCampo(e.target);
+  if (e.target.id === "pCli") escolherClientePrev();
+  if (e.target.id === "pTag") mostrarHorPrev();
+  if (e.target.id === "almDia") { S.almRelDia = e.target.value; render(); }
+  if (e.target.id === "pData" || e.target.id === "pHora") avisoPrev();
+  if (e.target.id === "eqTipo") { S.eqF.tipo = e.target.value; atualizaListaEq(); }
+  if (e.target.id === "eqSit") { S.eqF.sit = e.target.value; atualizaListaEq(); }
+  if (e.target.id === "eqRev") { S.eqF.rev = e.target.checked; atualizaListaEq(); }
+});
+async function salvarTecCampo(el) {
+  const [id, campo] = el.dataset.tedit.split("|"); let v = el.value.trim();
+  if (campo === "placa") v = v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  try { await updateDoc(doc(db, "tecnicos", id), { [campo]: v }); toast(`✔ ${campo === "placa" ? "Placa" : campo === "veiculo" ? "Veículo" : "Celular"} gravado.`); }
+  catch (e) { toast("Não gravou: " + esc(msgErro(e))); }
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.querySelectorAll(".mdl.on").forEach(m => m.classList.remove("on"));
+  if (e.key === "Enter" && e.target.dataset && e.target.dataset.ref) e.target.blur();
+  if (e.key === "Enter" && e.target.dataset && e.target.dataset.fx) { const id = e.target.dataset.fx; corrigirTag(id); }
+  if (e.key === "Enter" && e.target.dataset && e.target.dataset.dst) salvarDestino(e.target.dataset.dst);
+  if (e.key === "Enter" && e.target.dataset && e.target.dataset.tedit) e.target.blur();
+});
+let eqT = null;
+document.addEventListener("input", e => { if (e.target.id === "eqQ") { S.eqF.q = e.target.value; clearTimeout(eqT); eqT = setTimeout(atualizaListaEq, 200); } });
+document.addEventListener("focusout", () => setTimeout(() => { if (S.pend) render(); }, 80));
+
+// relógio + tempos de espera
+function tic() { $("#relogio").textContent = hm(new Date()); }
+tic(); setInterval(() => { tic(); if (S.user && S.almDia && S.almDia !== hojeISO()) { ouvirAlmocos(); } almocoAutomatico(); render(); alarmeTempo(); }, 30000);
+const ALARMADAS = new Set();
+function alarmeTempo() {
+  const novas = [...S.ss.values()].filter(s => nivelTempo(s) === 2 && !ALARMADAS.has(s.id));
+  if (!novas.length) return;
+  novas.forEach(s => ALARMADAS.add(s.id));
+  if (S.som) { bip(); setTimeout(bip, 400); setTimeout(bip, 800); }
+  toast(`⚠ ${novas.length === 1 ? "SS " + fmt(novas[0].numero) + " está" : novas.length + " SS estão"} aguardando técnico além do prazo${novas.some(x => x.parado) ? " (equipamento PARADO)" : ""}. Designe o quanto antes.`);
+}
+</script>
+</body>
+</html>

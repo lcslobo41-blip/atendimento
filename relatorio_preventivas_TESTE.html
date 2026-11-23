@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de Preventivas – FF (TESTE)</title>
+<style>
+:root{--bg:#EEF1F5;--panel:#fff;--ink:#14202C;--muted:#5B6B7B;--line:#D6DDE5;--ff:#0C427E;--ffo:#E75723;--safety:#F2B705;--navy:#1B2A3A;--ok:#2E7D4F;--warn:#B7791F;--crit:#C53030;--mono:ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",sans-serif}
+.teste{background:var(--safety);text-align:center;font-weight:700;font-size:12px;padding:3px}
+header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header .logo{font-weight:800;font-size:20px}header .logo b{color:var(--safety)}header .t{font-weight:600}
+main{max-width:1180px;margin:0 auto;padding:16px;display:grid;gap:14px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+h2{margin:0 0 10px;font-size:15px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:grid;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+input,select{font:inherit;padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;color:var(--ink);background:#fff}
+button{font:inherit;font-weight:700;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;cursor:pointer}
+button.pri{background:var(--ff);border-color:var(--ff);color:#fff}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+.card .n{font-size:28px;font-weight:800;line-height:1.1}.card .l{font-size:12px;color:var(--muted);font-weight:600}
+.card.ok .n{color:var(--ok)}.card.crit .n{color:var(--crit)}.card.warn .n{color:var(--warn)}.card.ff .n{color:var(--ff)}
+.graf{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.barras{display:grid;gap:6px}
+.barra{display:grid;grid-template-columns:150px 1fr 60px;gap:8px;align-items:center;font-size:13px}
+.barra .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.barra .tr{height:14px;background:#EEF1F5;border-radius:99px;overflow:hidden;position:relative}
+.barra .tr i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.barra .v{font-family:var(--mono);text-align:right}
+.mes{display:flex;gap:10px;align-items:flex-end;height:150px;border-bottom:1px solid var(--line);padding:0 4px}
+.mes .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:34px}
+.mes .par{display:flex;gap:3px;align-items:flex-end;height:120px}
+.mes .par i{width:14px;border-radius:3px 3px 0 0}
+.mes .rot{font-size:11px;color:var(--muted)}
+.leg{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--line);padding:6px}
+td{border-bottom:1px solid var(--line);padding:6px;vertical-align:top}
+.st{display:inline-block;font-weight:700;font-size:11.5px;padding:1px 7px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+.st.ok{color:var(--ok);border-color:var(--ok)}.st.crit{color:var(--crit);border-color:var(--crit)}.st.warn{color:var(--warn);border-color:var(--warn)}.st.ff{color:var(--ff);border-color:var(--ff)}
+.mut{color:var(--muted)}.erro{color:var(--crit);font-weight:600}
+[hidden]{display:none!important}
+.cab-print{display:none}
+@media print{
+  body{background:#fff}.teste,header,.filtros button,#bLogin,.noprint{display:none!important}
+  main{max-width:none;padding:0}.box{border:none;padding:6px 0;break-inside:avoid}
+  .cab-print{display:block;border-bottom:2px solid #000;margin-bottom:8px}
+  table{font-size:10.5px}tr{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="teste">AMBIENTE DE TESTE – relatorio_preventivas_TESTE</div>
+<header><div class="logo">FF <b>LOGÍSTICA</b></div><div class="t">Relatório de Manutenção Preventiva · rastreabilidade ISO 9001</div>
+  <a href="painel_adm_v1_TESTE.html" style="margin-left:auto;color:#fff;font-weight:600">‹ Painel ADM</a></header>
+<main>
+  <section class="box" id="bLogin">
+    <h2>Entrar (login do Painel ADM)</h2>
+    <div class="filtros"><label>E-mail<input id="email" type="email" autocomplete="username"></label>
+      <label>Senha<input id="senha" type="password" autocomplete="current-password"></label><button class="pri" id="entrar">Entrar</button></div>
+    <div class="erro" id="eLogin"></div>
+  </section>
+
+  <div id="app" hidden>
+    <div class="cab-print"><b>FF LOGÍSTICA</b> – Relatório de Manutenção Preventiva (ISO 9001) · <span id="pPeriodo"></span> · emitido em <span id="pEmit"></span></div>
+    <section class="box">
+      <h2>Filtros</h2>
+      <div class="filtros">
+        <label>De<input id="de" type="date"></label>
+        <label>Até<input id="ate" type="date"></label>
+        <label>Cliente<select id="cli"><option value="">Todos</option></select></label>
+        <button class="pri" id="bAplicar">Aplicar</button>
+        <span style="flex:1"></span>
+        <button id="bPdf">🖨 Imprimir / PDF</button>
+        <button id="bXls">⬇ Excel</button>
+      </div>
+      <div class="mut" id="info" style="margin-top:6px"></div>
+    </section>
+
+    <section class="box">
+      <h2>Resumo do período</h2>
+      <div class="cards" id="cards"></div>
+    </section>
+
+    <section class="graf">
+      <div class="box"><h2>Programadas x realizadas por mês</h2><div class="mes" id="gMes"></div>
+        <div class="leg"><span><i style="background:var(--ff)"></i>Programadas</span><span><i style="background:var(--ok)"></i>Realizadas</span></div></div>
+      <div class="box"><h2>Motivos de reagendamento</h2><div class="barras" id="gMot"></div></div>
+      <div class="box"><h2>% de cumprimento por cliente (piores primeiro)</h2><div class="barras" id="gCli"></div></div>
+    </section>
+
+    <section class="box">
+      <h2>Detalhe por preventiva</h2>
+      <div style="overflow-x:auto"><table>
+        <thead><tr><th>Cliente</th><th>TAG</th><th>Programada</th><th>Situação</th><th>Confirmação</th><th>Reagendamentos</th><th>Contatos (ligações)</th><th>SS / realizada</th><th>Horímetro</th></tr></thead>
+        <tbody id="tb"></tbody></table></div>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const app = initializeApp({
+  apiKey: "AIzaSyDYul8Os92mtNRjnV-Zxe_GA8Z8ymrWfJ0", authDomain: "ff-atendimento.firebaseapp.com", projectId: "ff-atendimento",
+  storageBucket: "ff-atendimento.firebasestorage.app", messagingSenderId: "466557786402", appId: "1:466557786402:web:98ad4085442de6d3cd6d7b"
+});
+const db = getFirestore(app), auth = getAuth(app);
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const dataBR = iso => iso ? String(iso).slice(0, 10).split("-").reverse().join("/") : "";
+const dt = v => !v ? null : v.toDate ? v.toDate() : new Date(v);
+const dhBR = v => { const d = dt(v); return d && !isNaN(d) ? d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ""; };
+const fmtSS = n => String(n ?? "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const hojeISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const ROT_LIG = { confirmou: "confirmou", reagendou: "reagendou", nao_atendeu: "não atendeu" };
+let PREV = [], SS = {};
+
+$("entrar").onclick = async () => {
+  $("eLogin").textContent = "";
+  try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("senha").value); } catch (e) { $("eLogin").textContent = "Não entrou: " + (e.code || e.message); }
+};
+onAuthStateChanged(auth, async u => {
+  $("bLogin").hidden = !!u; $("app").hidden = !u; if (!u) return;
+  const d = new Date(); $("ate").value = hojeISO(); d.setMonth(d.getMonth() - 3); $("de").value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  await carregar(); aplicar();
+});
+
+async function carregar() {
+  $("info").textContent = "Carregando preventivas…";
+  try {
+    const q = await getDocs(collection(db, "preventivas"));
+    PREV = []; q.forEach(x => PREV.push({ id: x.id, ...x.data() }));
+    const nums = [...new Set(PREV.map(p => p.ss_numero).filter(Boolean))];
+    await Promise.all(nums.map(async n => { try { const s = await getDoc(doc(db, "ss", String(n))); if (s.exists()) SS[n] = s.data(); } catch (e) { } }));
+    const clis = [...new Set(PREV.map(p => (p.cliente || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    $("cli").innerHTML = '<option value="">Todos</option>' + clis.map(c => `<option>${esc(c)}</option>`).join("");
+  } catch (e) { $("info").innerHTML = `<span class="erro">Não carregou: ${esc(e.code || e.message)}</span>`; }
+}
+
+// situação final de cada preventiva (para o auditor)
+function classificar(p) {
+  const s = p.ss_numero ? SS[p.ss_numero] : null;
+  const ligs = p.ligacoes || [];
+  const reag = []
+    .concat((p.respostas_anteriores || []).filter(r => r && r.tipo === "nao").map(r => ({ quando: r.em, de: "", para: r.data_desejada, motivo: r.motivo + (r.obs ? " – " + r.obs : ""), por: "cliente (e-mail): " + (r.nome || "") })))
+    .concat(ligs.filter(l => l.resultado === "reagendou").map(l => ({ quando: l.em_contato, de: "", para: l.nova_data, motivo: l.motivo + (l.obs ? " – " + l.obs : ""), por: "telefone: " + (l.nome || "") + " (ADM " + (l.registrado_por || "") + ")" })));
+  if (p.status === "recusada" && p.resposta) reag.push({ quando: p.resposta.em, para: p.resposta.data_desejada, motivo: p.resposta.motivo + (p.resposta.obs ? " – " + p.resposta.obs : ""), por: "cliente (e-mail): " + (p.resposta.nome || ""), pendente: true });
+  let sit, cls;
+  if (p.status === "cancelada") { sit = "Cancelada"; cls = ""; }
+  else if (s && s.status === "concluida") { sit = "Realizada"; cls = "ok"; }
+  else if (p.status === "sem_contato") { sit = "Não realizada – cliente sem contato"; cls = "crit"; }
+  else if (s && s.status === "cancelada") { sit = "Não realizada – SS cancelada"; cls = "crit"; }
+  else if (s) { sit = "SS aberta (em execução)"; cls = "ff"; }
+  else if (p.data < hojeISO() && p.status !== "confirmada") { sit = "Vencida sem execução"; cls = "crit"; }
+  else if (p.status === "confirmada") { sit = "Confirmada – aguardando data"; cls = "ff"; }
+  else if (p.status === "recusada") { sit = "Reagendamento pedido – aguardando ADM"; cls = "warn"; }
+  else if (p.status === "sem_resposta") { sit = "Sem resposta – em contato"; cls = "warn"; }
+  else { sit = p.email_enviado_em ? "Aguardando resposta do cliente" : "Agendada"; cls = ""; }
+  const conf = p.status === "confirmada" || (s && s.status) ? (p.confirmada_via || "") + (p.resposta && p.resposta.tipo === "sim" ? ` – ${p.resposta.nome || ""} em ${dhBR(p.resposta.em)}` : "") : "";
+  return { p, s, sit, cls, conf, reag, ligs, realizada: sit === "Realizada", naoRealizada: cls === "crit", cancelada: p.status === "cancelada", futura: p.data > hojeISO() && !(s && s.status === "concluida") };
+}
+
+function aplicar() {
+  const de = $("de").value || "0000-01-01", ate = $("ate").value || "9999-12-31", cli = $("cli").value;
+  const L = PREV.filter(p => p.data >= de && p.data <= ate && (!cli || (p.cliente || "").trim() === cli)).sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora)).map(classificar);
+  const ativas = L.filter(x => !x.cancelada);
+  const venc = ativas.filter(x => !x.futura);                       // base do % de cumprimento: o que já deveria ter acontecido
+  const real = ativas.filter(x => x.realizada).length;
+  const pct = venc.length ? Math.round(100 * real / venc.length) : null;
+  const reagN = ativas.filter(x => x.reag.length).length;
+  const confE = ativas.filter(x => /e-mail/.test(x.p.confirmada_via || "")).length, confT = ativas.filter(x => /telefone/.test(x.p.confirmada_via || "")).length;
+  const naoR = ativas.filter(x => x.naoRealizada).length;
+  $("info").textContent = `${L.length} preventiva(s) no período${cli ? " · cliente " + cli : ""} · % de cumprimento = realizadas ÷ programadas com data até hoje (canceladas fora da conta).`;
+  $("pPeriodo").textContent = `${dataBR(de)} a ${dataBR(ate)}${cli ? " · " + cli : " · todos os clientes"}`; $("pEmit").textContent = new Date().toLocaleString("pt-BR");
+  const card = (n, l, c = "") => `<div class="card ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  $("cards").innerHTML = card(ativas.length, "Programadas", "ff") + card(real, "Realizadas", "ok") + card(pct == null ? "–" : pct + "%", "% de cumprimento", pct == null ? "" : pct >= 90 ? "ok" : pct >= 70 ? "warn" : "crit")
+    + card(confE, "Confirmadas pelo cliente (e-mail)") + card(confT, "Confirmadas por telefone") + card(reagN, "Reagendadas", "warn") + card(naoR, "Não realizadas", "crit")
+    + card(L.filter(x => x.cancelada).length, "Canceladas");
+  // por mês
+  const meses = {}; ativas.forEach(x => { const m = x.p.data.slice(0, 7); meses[m] = meses[m] || { p: 0, r: 0 }; meses[m].p++; if (x.realizada) meses[m].r++; });
+  const mk = Object.keys(meses).sort(), mx = Math.max(1, ...mk.map(k => meses[k].p));
+  $("gMes").innerHTML = mk.length ? mk.map(k => `<div class="col"><div class="par"><i style="height:${120 * meses[k].p / mx}px;background:var(--ff)" title="${meses[k].p} programadas"></i><i style="height:${120 * meses[k].r / mx}px;background:var(--ok)" title="${meses[k].r} realizadas"></i></div><div class="rot">${k.slice(5)}/${k.slice(2, 4)} · ${meses[k].r}/${meses[k].p}</div></div>`).join("") : '<span class="mut">Sem dados no período.</span>';
+  // motivos
+  const mot = {}; ativas.forEach(x => x.reag.forEach(r => { const k = String(r.motivo || "não informado").split(" – ")[0]; mot[k] = (mot[k] || 0) + 1; }));
+  const mm = Object.entries(mot).sort((a, b) => b[1] - a[1]), mmx = Math.max(1, ...mm.map(x => x[1]));
+  $("gMot").innerHTML = mm.length ? mm.map(([k, v]) => `<div class="barra"><span class="nm" title="${esc(k)}">${esc(k)}</span><span class="tr"><i style="width:${100 * v / mmx}%;background:var(--warn)"></i></span><span class="v">${v}</span></div>`).join("") : '<span class="mut">Nenhum reagendamento no período.</span>';
+  // por cliente
+  const pc = {}; venc.forEach(x => { const c = x.p.cliente || "(sem cliente)"; pc[c] = pc[c] || { v: 0, r: 0 }; pc[c].v++; if (x.realizada) pc[c].r++; });
+  const pcl = Object.entries(pc).map(([c, o]) => [c, Math.round(100 * o.r / o.v), o]).sort((a, b) => a[1] - b[1]).slice(0, 12);
+  $("gCli").innerHTML = pcl.length ? pcl.map(([c, v, o]) => `<div class="barra"><span class="nm" title="${esc(c)}">${esc(c)}</span><span class="tr"><i style="width:${v}%;background:${v >= 90 ? "var(--ok)" : v >= 70 ? "var(--warn)" : "var(--crit)"}"></i></span><span class="v">${v}% <span class="mut">(${o.r}/${o.v})</span></span></div>`).join("") : '<span class="mut">Sem preventivas vencidas no período.</span>';
+  // detalhe
+  $("tb").innerHTML = L.length ? L.map(x => {
+    const p = x.p, s = x.s;
+    const reag = x.reag.map(r => `${dataBR(r.para)} · ${esc(r.motivo)}<br><span class="mut">${esc(r.por)} · ${dhBR(r.quando)}${r.pendente ? " · aguardando ADM" : ""}</span>`).join("<hr style='border:0;border-top:1px dashed var(--line)'>")
+      + (p.data_anterior ? `<div class="mut">data original: ${dataBR(p.data_anterior)} ${esc(p.hora_anterior || "")}</div>` : "");
+    const lig = x.ligs.map(l => `${l.n}ª ${dhBR(l.em_contato)} · ${ROT_LIG[l.resultado] || esc(l.resultado)}${l.nome ? " · " + esc(l.nome) : ""}<span class="mut"> (ADM ${esc(l.registrado_por || "")})</span>`).join("<br>")
+      + (p.escalado_em ? `<div class="erro">Supervisão avisada ${dhBR(p.escalado_em)}</div>` : "");
+    const ssTxt = s ? `SS ${fmtSS(p.ss_numero)}${s.encerrada_em ? "<br>concluída " + dhBR(s.encerrada_em) : ""}` : (p.ss_numero ? "SS " + fmtSS(p.ss_numero) : "–");
+    const hor = s && (s.horimetros || []).length ? s.horimetros.map(h => h.nao_lido ? `${esc(h.tag)}: não lido (${esc(h.motivo || "")})` : `${esc(h.tag)}: ${String(h.horas).replace(".", ",")} h`).join("<br>") : (p.email_horas != null ? `<span class="mut">no agendamento: ${String(p.email_horas).replace(".", ",")} h</span>` : "–");
+    return `<tr><td>${esc(p.cliente)}</td><td style="font-family:var(--mono)">${esc(p.tag)}</td><td>${dataBR(p.data)} ${esc(p.hora || "")}<div class="mut">e-mail: ${p.email_enviado_em ? dhBR(p.email_enviado_em) : "não enviado"}</div></td>
+      <td><span class="st ${x.cls}">${esc(x.sit)}</span></td><td>${esc(x.conf) || "–"}</td><td>${reag || "–"}</td><td>${lig || "–"}</td><td>${ssTxt}</td><td>${hor}</td></tr>`;
+  }).join("") : '<tr><td colspan="9" class="mut">Nenhuma preventiva no período.</td></tr>';
+  window.__LINHAS = L;
+}
+$("bAplicar").onclick = aplicar;
+$("bPdf").onclick = () => window.print();
+$("bXls").onclick = () => {
+  const L = window.__LINHAS || [];
+  const cab = ["Cliente", "TAG", "Data programada", "Hora", "Situação", "Confirmada via", "Confirmação (nome/data)", "Reagendamentos", "Data original", "Ligações", "Supervisão avisada", "SS", "SS concluída em", "Horímetro", "E-mail enviado em", "Contato", "E-mail cliente"];
+  const linhas = L.map(x => {
+    const p = x.p, s = x.s;
+    return [p.cliente, p.tag, dataBR(p.data), p.hora, x.sit, p.confirmada_via || "", p.resposta && p.resposta.tipo === "sim" ? `${p.resposta.nome || ""} ${dhBR(p.resposta.em)}` : "",
+      x.reag.map(r => `${dataBR(r.para)} – ${r.motivo} (${r.por})`).join(" | "), p.data_anterior ? dataBR(p.data_anterior) : "",
+      x.ligs.map(l => `${l.n}ª ${dhBR(l.em_contato)} ${ROT_LIG[l.resultado] || l.resultado}${l.nome ? " – " + l.nome : ""}`).join(" | "), p.escalado_em ? dhBR(p.escalado_em) : "",
+      p.ss_numero || "", s && s.encerrada_em ? dhBR(s.encerrada_em) : "",
+      s && (s.horimetros || []).length ? s.horimetros.map(h => h.nao_lido ? `${h.tag}: não lido` : `${h.tag}: ${h.horas}`).join(" | ") : "",
+      p.email_enviado_em ? dhBR(p.email_enviado_em) : "", p.contato_nome || "", p.email || ""];
+  });
+  const csv = "﻿" + [cab].concat(linhas).map(l => l.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `relatorio_preventivas_${$("de").value}_a_${$("ate").value}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+</script>
+</body>
+</html>
