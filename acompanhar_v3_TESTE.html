@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Acompanhe seu atendimento – FF Logística</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#EEF1F5; --panel:#FFFFFF; --sunk:#F4F6F9; --ink:#14202C; --muted:#5B6B7B; --line:#D6DDE5;
+  --ff:#0C427E; --ffo:#E75723; --safety:#F2B705; --navy:#1B2A3A; --ok:#2E7D4F; --ok-bg:#E8F5EE; --crit:#C53030;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body)}
+[hidden]{display:none!important}
+.teste{background:var(--safety);color:var(--navy);text-align:center;font:700 12px var(--body);padding:3px}
+header{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.logo{font:700 22px/1 var(--display);letter-spacing:.03em}.logo b{color:var(--safety)}
+header small{opacity:.75;font-size:13px}
+.stripe{height:6px;background:repeating-linear-gradient(-45deg,var(--safety) 0 10px,var(--navy) 10px 20px)}
+main{max-width:560px;margin:0 auto;padding:16px;display:grid;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.ssn{font:500 13px var(--mono);color:var(--muted)}
+.eq{font:700 20px/1.2 var(--display);margin-top:2px}
+.st{display:flex;gap:12px;align-items:center}
+.ic{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:24px;color:#fff;background:var(--ff)}
+.st h1{font:700 26px/1.1 var(--display);margin:0}
+.st p{margin:4px 0 0;color:var(--muted);font-size:15px}
+.tec{display:flex;gap:12px;align-items:center}
+.av{flex:none;width:48px;height:48px;border-radius:50%;background:var(--ff);color:#fff;display:grid;place-items:center;font:700 22px var(--display)}
+.tec .nm{font:700 20px/1.1 var(--display)}
+.tec .vh{color:var(--muted);font-size:14px}
+.tec .vh b{font-family:var(--mono);font-weight:500;color:var(--ink)}
+.bts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.bt{display:block;text-align:center;text-decoration:none;font-weight:600;border-radius:10px;padding:11px;border:1.5px solid var(--ff);color:var(--ff);background:var(--panel)}
+.bt.wa{background:#1F8A4C;border-color:#1F8A4C;color:#fff}
+h2{font:700 17px var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:0 0 14px;position:relative}
+.tl li::before{content:"";position:absolute;left:10px;top:20px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.tl .d{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);background:var(--panel);z-index:1}
+.tl li.ok .d{background:var(--ok);border-color:var(--ok)}
+.tl li.atual .d{background:var(--ok);border-color:var(--ok);box-shadow:0 0 0 4px #D6EFE0}
+.tl .t{font-weight:600}.tl li.fut .t{color:var(--muted);font-weight:500}
+.tl .h{font:500 13px var(--mono);color:var(--muted)}
+.mapa{border:1.5px dashed var(--line);border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:14px;background:var(--sunk)}
+.ff{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;font-size:14px;color:var(--muted)}
+.ff a{color:var(--ff);font-weight:600}
+.msg{text-align:center;color:var(--muted)}
+.atu{font-size:12px;color:var(--muted);text-align:center}
+.abas{display:flex;gap:8px;flex-wrap:wrap}
+.aba{border:1.5px solid var(--line);background:var(--panel);border-radius:99px;padding:7px 12px;font:600 14px var(--body);color:var(--ink);cursor:pointer}
+.aba.on{background:var(--ff);border-color:var(--ff);color:#fff}
+</style>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+#mapa{height:280px;border-radius:12px;border:1px solid var(--line);margin-top:10px;z-index:0}
+.minfo{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.minfo .eta{font:700 26px/1 var(--display);color:var(--ff)}
+.minfo .eta small{font:500 14px var(--body);color:var(--muted);margin-left:4px}
+.minfo .sub{color:var(--muted);font-size:14px}
+#cMapa.cheia{position:fixed;inset:0;z-index:9999;margin:0!important;border-radius:0;display:flex;flex-direction:column}#cMapa.cheia #mapa{flex:1;height:auto}
+.btTela{float:right;font:inherit;font-size:13px;font-weight:700;border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer}
+.chegando{background:#E8F5EE;border:1.5px solid var(--ok);color:var(--ok);border-radius:10px;padding:8px 12px;font-weight:700;width:100%}
+.velho{color:#B7791F;font-size:13px}
+.anim{overflow:hidden;padding:0}
+.anim .topo{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 14px 0}
+.anim .topo h2{margin:0}
+.anim .bsom{border:1.5px solid var(--line);background:var(--panel);border-radius:8px;padding:4px 9px;font:600 13px var(--body);cursor:pointer;color:var(--ink)}
+.anim .bsom[aria-pressed="true"]{background:var(--safety);border-color:var(--safety);color:var(--navy)}
+.anim .cap{padding:8px 14px 12px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.anim .cap button{border:0;background:none;color:var(--ff);font:600 13px var(--body);cursor:pointer;white-space:nowrap}
+.cena{display:block;width:100%;height:auto;margin-top:6px}
+.cena .tec{animation:tec 9s linear 1 forwards}
+.cena .pA{transform-box:fill-box;transform-origin:50% 0;animation:sw .55s ease-in-out 8 alternate}
+.cena .pB,.cena .bB{transform-box:fill-box;transform-origin:50% 0;animation:sw .55s ease-in-out 8 alternate-reverse}
+.cena .cxBanc{animation:somePeg 9s linear 1 forwards}.cena .cxMao{opacity:0;animation:apPeg 9s linear 1 forwards}
+.cena .porta{animation:porta 9s linear 1 forwards}
+.cena .fumaca{opacity:0;animation:fum 9s linear 1 forwards}
+.cena .carro{animation:sai 9s 1 forwards}
+.cena .rd{transform-box:fill-box;transform-origin:center;animation:gira 9s 1 forwards}
+.cena .barra{transform-box:view-box;transform-origin:318px 108px;animation:barra 9s ease-in-out 1 forwards}
+.cena.narua .carro{animation:saiRua 7s 1 forwards}.cena.narua .rd{animation:giraRua 7s 1 forwards}.cena.narua .porta{display:none}.cena.narua .fumaca{animation:fumRua 7s linear 1 forwards}
+@keyframes tec{0%{transform:translateX(30px);opacity:0}3%{opacity:1}44%{transform:translateX(232px);opacity:1}47%,100%{transform:translateX(236px);opacity:0}}
+@keyframes sw{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+@keyframes somePeg{0%,12%{opacity:1}13%,100%{opacity:0}}
+@keyframes apPeg{0%,12%{opacity:0}13%,100%{opacity:1}}
+@keyframes porta{0%,45%{opacity:1}46%,100%{opacity:0}}
+@keyframes fum{0%,48%{opacity:0;transform:translateX(0)}52%{opacity:.9}62%{opacity:0;transform:translateX(-14px)}100%{opacity:0}}
+@keyframes sai{0%,54%{transform:translateX(0);animation-timing-function:ease-in}90%,100%{transform:translateX(250px)}}
+@keyframes gira{0%,54%{transform:rotate(0);animation-timing-function:ease-in}90%,100%{transform:rotate(1080deg)}}
+@keyframes saiRua{0%,30%{transform:translateX(0);animation-timing-function:ease-in}85%,100%{transform:translateX(250px)}}
+@keyframes giraRua{0%,30%{transform:rotate(0);animation-timing-function:ease-in}85%,100%{transform:rotate(1080deg)}}
+@keyframes fumRua{0%,12%{opacity:0;transform:translateX(0)}18%{opacity:.9}30%{opacity:0;transform:translateX(-14px)}100%{opacity:0}}
+@keyframes passa{0%{transform:translateX(-300px)}80%,100%{transform:translateX(250px)}}
+@keyframes gira2{0%{transform:rotate(0)}80%,100%{transform:rotate(1440deg)}}
+@keyframes barra{0%,52%{transform:rotate(0)}60%,80%{transform:rotate(80deg)}90%,100%{transform:rotate(0)}}
+@media (prefers-reduced-motion: reduce){.cena *{animation-duration:.01s!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="teste">AMBIENTE DE TESTE – acompanhar_v3_TESTE</div>
+<header><div class="logo">FF <b>LOGÍSTICA</b></div><small>Acompanhe seu atendimento</small><a id="voltaAdm" hidden href="painel_adm_v1_TESTE.html" style="margin-left:auto;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 10px;font-weight:600;font-size:13px;text-decoration:none">‹ Voltar ao Painel ADM</a></header>
+<div class="stripe"></div>
+
+<main>
+  <div class="card msg" id="carregando">Carregando sua solicitação…</div>
+  <div class="card msg" id="erro" hidden></div>
+
+  <div id="tela" hidden>
+    <div class="card" id="cAbas" style="margin-bottom:12px" hidden>
+      <h2>Seus equipamentos neste atendimento</h2>
+      <div class="abas" id="abas"></div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="ssn" id="ssn"></div>
+      <div class="eq" id="eq"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="st"><div class="ic" id="ic">✓</div><div><h1 id="stT"></h1><p id="stP"></p></div></div>
+    </div>
+
+    <div class="card" id="cTec" style="margin-bottom:12px" hidden>
+      <h2>Seu técnico</h2>
+      <div class="tec"><div class="av" id="tAv"></div><div><div class="nm" id="tNm"></div><div class="vh" id="tVh"></div></div></div>
+      <div class="bts" id="tBts"></div>
+    </div>
+
+    <div class="card anim" id="cAnim" style="margin-bottom:12px" hidden>
+      <div class="topo"><h2>Técnico a caminho</h2><button type="button" class="bsom" id="bSom" aria-pressed="false">🔇 Ativar som</button></div>
+      <div id="animBox"></div>
+      <div class="cap"><span id="animCap"></span><button type="button" id="bRever">↻ Ver de novo</button></div>
+    </div>
+
+    <div class="card" id="cMapa" style="margin-bottom:12px" hidden>
+      <h2>Trajeto do técnico <button class="btTela" id="btTela" type="button">⛶ Tela cheia</button></h2>
+      <div class="minfo" id="mInfo">Aguardando a localização do veículo…</div>
+      <div id="mapa" hidden></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <h2>Andamento</h2>
+      <ol class="tl" id="tl"></ol>
+    </div>
+
+    <div class="card ff">
+      <span>Dúvidas sobre o atendimento?</span>
+      <a id="ffWa" target="_blank" rel="noopener">Falar com a FF</a>
+    </div>
+    <p class="atu" id="atu"></p>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDYul8Os92mtNRjnV-Zxe_GA8Z8ymrWfJ0",
+  authDomain: "ff-atendimento.firebaseapp.com",
+  projectId: "ff-atendimento",
+  storageBucket: "ff-atendimento.firebasestorage.app",
+  messagingSenderId: "466557786402",
+  appId: "1:466557786402:web:98ad4085442de6d3cd6d7b"
+};
+const db = getFirestore(initializeApp(firebaseConfig));
+
+const FONE_FF = "5521981038612";   // (21) 98103-8612 – a confirmar
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => String(n ?? "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+const hora = iso => { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+const digitos = t => String(t || "").replace(/\D/g, "");
+const foneBR = t => { const d = digitos(t); return d.length >= 12 ? d : d.length >= 10 ? "55" + d : ""; };
+
+// textos para o cliente (tom profissional; nada interno)
+const TXT = {
+  recebida: ["✓", "Solicitação registrada", "Seu chamado foi direcionado ao departamento técnico. Avisaremos assim que um técnico for designado."],
+  aguardando_financeiro: ["⏳", "Solicitação recebida", "Sua solicitação está em análise. Entraremos em contato em breve."],
+  designada: ["🧰", "Técnico designado", "%T está preparando o material para o seu atendimento."],
+  a_caminho: ["🚐", "Técnico a caminho", "%T saiu para o seu atendimento."],
+  chegou: ["📍", "O técnico chegou", "%T chegou ao local. Indique a ele o equipamento pela TAG."],
+  em_atendimento: ["🔧", "Em atendimento", "%T está trabalhando no seu equipamento."],
+  concluida: ["✔", "Atendimento concluído", "Obrigado por contar com a FF Logística."],
+  cancelada: ["✕", "Solicitação cancelada", "Em caso de dúvida, fale com a FF Logística."]
+};
+const ETAPAS = [["recebida", "Solicitação registrada"], ["designada", "Técnico designado"], ["a_caminho", "Técnico a caminho"],
+  ["chegou", "Técnico chegou"], ["em_atendimento", "Em atendimento"], ["concluida", "Atendimento concluído"]];
+
+// mapa do trajeto (posição enviada pela ponte do mapa enquanto a SS está "A caminho")
+let MAPA = null, MK = null, DST = null, TR = null, RL = null, AJ = null;
+document.addEventListener("click", ev => {
+  if (ev.target && ev.target.id === "btTela") {
+    const c = $("cMapa"), on = !c.classList.contains("cheia"); c.classList.toggle("cheia", on);
+    ev.target.textContent = on ? "✕ Fechar" : "⛶ Tela cheia";
+    setTimeout(() => MAPA && MAPA.invalidateSize(), 80);
+  }
+});
+const icone = (e, t) => L.divIcon({ className: "", iconSize: [34, 34], iconAnchor: [17, 17],
+  html: `<div title="${t}" style="font-size:28px;line-height:34px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))">${e}</div>` });
+function mapa(a, nomeT) {
+  const p = a.posicao, d = a.destino, info = $("mInfo");
+  if (!p || p.lat == null) { $("mapa").hidden = true; info.innerHTML = "Aguardando a localização do veículo…"; return; }
+  const min = Math.round((Date.now() - new Date(p.em).getTime()) / 60000);
+  const velho = isFinite(min) && min > 10 ? `<span class="velho">⚠ localização sem atualizar há ${min} min</span>` : "";
+  const kmTx = a.distancia_km != null ? ` · ${String(a.distancia_km).replace(".", ",")} km` : "";
+  if (a.no_local) info.innerHTML = `<div class="chegando">📍 ${esc(nomeT)} chegou ao local e está estacionando.</div>${velho}`;
+  else if (a.chegando) info.innerHTML = `<div class="chegando">📍 ${esc(nomeT)} está chegando!${a.eta_min != null ? ` ~${a.eta_min} min${kmTx}` : ""}</div>${velho}`;
+  else if (a.eta_min != null) info.innerHTML = `<span class="eta">~${a.eta_min} min<small>previsão de chegada ${esc(a.eta_hora || "")}</small></span>
+      <span class="sub">${String(a.distancia_km ?? "").replace(".", ",")} km até você${a.eta_fonte === "estimado" ? " (estimado)" : ""}</span>${velho}`;
+  else info.innerHTML = `<span class="sub">${esc(nomeT)} está a caminho.</span>${velho}`;
+  if (typeof L === "undefined") { $("mapa").hidden = true; return; }
+  $("mapa").hidden = false;
+  if (!MAPA) {
+    MAPA = L.map("mapa", { zoomControl: true, attributionControl: true });
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom: 19, attribution: "© Esri" }).addTo(MAPA);
+  }
+  const ll = [p.lat, p.lng];
+  if (!MK) MK = L.marker(ll, { icon: icone("🚐", "Técnico") }).addTo(MAPA); else MK.setLatLng(ll);
+  if (d && d.lat != null) { if (!DST) DST = L.marker([d.lat, d.lng], { icon: icone("📍", "Você") }).addTo(MAPA); else DST.setLatLng([d.lat, d.lng]); }
+  const tr = (a.trilha || []).map(x => [x.lat, x.lng]);
+  if (!TR) TR = L.polyline(tr, { color: "#1F5FA8", weight: 5, opacity: .8 }).addTo(MAPA); else TR.setLatLngs(tr);
+  const rl = (a.rota_linha || []).map(x => [x.lat, x.lng]);
+  if (!RL) RL = L.polyline(rl, { color: "#E75723", weight: 5, opacity: .75, dashArray: "8 8" }).addTo(MAPA); else RL.setLatLngs(rl);
+  setTimeout(() => {
+    MAPA.invalidateSize();
+    if (AJ !== a.ss) { AJ = a.ss; MAPA.fitBounds(d && d.lat != null ? [ll, [d.lat, d.lng]] : [ll, ll], { padding: [40, 40], maxZoom: 15 }); }
+  }, 60);
+}
+// ---------------------------------------------------------------- rev. 3 (v3): animação do técnico saindo, conforme a origem
+// origem_saida: "residencia" (casa) · "base" (FF, passa pela cancela) · "cliente" (prédio de empresa) · "rua" (já na rua)
+const FF_LOGO = '<path fill="#0C427E" d="M0 58V20Q0 0 20 0H80Q100 0 100 20V30H86V22Q86 14 78 14H22Q14 14 14 22V30H74V44H14V58Z"/><path fill="#E75723" transform="rotate(180 50 50)" d="M0 58V20Q0 0 20 0H80Q100 0 100 20V30H86V22Q86 14 78 14H22Q14 14 14 22V30H74V44H14V58Z"/>';
+const CAP_ORI = {
+  residencia: "%T saiu de casa e está a caminho do seu atendimento",
+  base: "%T pegou a caixa de ferramentas e saiu da base da FF rumo ao seu atendimento",
+  cliente: "%T concluiu o atendimento anterior e está a caminho",
+  rua: "%T já está no veículo e saiu com destino a %C para realizar seu atendimento"
+};
+function predio(ori) {
+  if (ori === "residencia") return `
+    <path d="M-4 70 L37 40 L78 70 Z" fill="#B7472A"/><rect x="2" y="70" width="70" height="70" fill="#F3E6D3" stroke="#D9C7AE"/>
+    <rect x="8" y="82" width="16" height="14" rx="1" fill="#C8D6E4" stroke="#9FB0C0"/><line x1="16" y1="82" x2="16" y2="96" stroke="#9FB0C0"/>
+    <rect x="28" y="96" width="20" height="44" rx="1" fill="#6B4A2E"/><circle cx="44" cy="119" r="1.4" fill="#F2C200"/>
+    <rect x="54" y="82" width="14" height="14" rx="1" fill="#C8D6E4" stroke="#9FB0C0"/>
+    <ellipse cx="66" cy="138" rx="9" ry="5" fill="#5F9E5A"/><ellipse cx="6" cy="138" rx="7" ry="4" fill="#5F9E5A"/>`;
+  if (ori === "cliente") return `
+    <rect x="0" y="34" width="80" height="106" fill="#DCE2E8" stroke="#B9C3CC"/><rect x="0" y="30" width="80" height="6" fill="#8E9AA6"/>
+    ${[0, 1, 2].map(r => [0, 1, 2, 3].map(c => `<rect x="${6 + c * 18}" y="${42 + r * 17}" width="12" height="10" fill="#9FB7CC"/>`).join("")).join("")}
+    <rect x="26" y="98" width="28" height="42" fill="#5E6B78"/><line x1="40" y1="98" x2="40" y2="140" stroke="#DCE2E8"/>
+    <rect x="22" y="91" width="36" height="6" rx="1" fill="#1B2A3A"/><text x="40" y="95.6" text-anchor="middle" font-size="4.4" font-weight="700" fill="#fff" font-family="Arial">CLIENTE</text>`;
+  if (ori === "rua") return `
+    <path d="M2 92 L24 74 L46 92 Z" fill="#9C5B3B"/><rect x="6" y="92" width="36" height="48" fill="#EFE3CF" stroke="#D9C7AE"/><rect x="19" y="112" width="10" height="28" fill="#6B4A2E"/><rect x="10" y="98" width="8" height="8" fill="#C8D6E4"/><rect x="30" y="98" width="8" height="8" fill="#C8D6E4"/>
+    <rect x="52" y="80" width="40" height="60" fill="#D8E2EA" stroke="#B9C3CC"/><rect x="52" y="76" width="40" height="5" fill="#8E9AA6"/><rect x="58" y="88" width="10" height="9" fill="#9FB7CC"/><rect x="76" y="88" width="10" height="9" fill="#9FB7CC"/><rect x="62" y="112" width="20" height="28" fill="#5E6B78"/>
+    <path d="M98 96 L120 80 L142 96 Z" fill="#B7472A"/><rect x="102" y="96" width="36" height="44" fill="#F3E6D3" stroke="#D9C7AE"/><rect x="115" y="114" width="10" height="26" fill="#6B4A2E"/><rect x="106" y="102" width="8" height="8" fill="#C8D6E4"/><rect x="126" y="102" width="8" height="8" fill="#C8D6E4"/>
+    <rect x="146" y="70" width="2.5" height="70" fill="#5E6B78"/><circle cx="147" cy="70" r="4" fill="#F2C200"/>
+    <ellipse cx="150" cy="139" rx="7" ry="3.5" fill="#5F9E5A"/>`;
+  return `
+    <path d="M-2 44 L36 30 L76 44 Z" fill="#5E6B78"/><rect x="0" y="44" width="74" height="96" fill="#F6F7F9" stroke="#C9D0D6"/>
+    <rect x="0" y="128" width="74" height="12" fill="#0C427E"/><g transform="translate(26,52) scale(.22)">${FF_LOGO}</g>
+    <rect x="6" y="72" width="16" height="12" rx="1" fill="#C8D6E4" stroke="#9FB0C0"/><rect x="52" y="72" width="16" height="12" rx="1" fill="#C8D6E4" stroke="#9FB0C0"/>
+    <rect x="24" y="94" width="26" height="46" rx="1" fill="#2A3038"/>
+    <rect x="84" y="116" width="30" height="3" rx="1" fill="#8A939C"/><rect x="86" y="119" width="2.5" height="21" fill="#8A939C"/><rect x="109.5" y="119" width="2.5" height="21" fill="#8A939C"/>`;
+}
+function caixa(x, y) {
+  return `<rect x="${x}" y="${y}" width="16" height="10" rx="1.5" fill="#E75723"/><path d="M${x + 4} ${y} V${y - 3} H${x + 12} V${y}" fill="none" stroke="#2A3038" stroke-width="1.6"/>
+    <rect x="${x + 4}" y="${y + 1.5}" width="8" height="7" rx="1.2" fill="#fff"/><g transform="translate(${x + 5.4},${y + 2.2}) scale(.052)">${FF_LOGO}</g>`;
+}
+function veiculoSVG(uno) {
+  const roda = (cx, r) => `<g class="rd"><circle cx="${cx}" cy="-6" r="${r}" fill="#1E2227"/><circle cx="${cx}" cy="-6" r="3.6" fill="#C9D0D6"/><path d="M${cx} -9.6V-2.4M${cx - 3.6} -6H${cx + 3.6}" stroke="#5E6B78" stroke-width="1.2"/></g>`;
+  if (uno) return `
+    <path d="M3 -12 L4 -44 Q5 -52 13 -52 H48 Q54 -52 58 -48 L68 -38 Q81 -36 84 -29 V-14 Q84 -9 79 -9 H7 Q3 -9 3 -12 Z" fill="#FAFBFC" stroke="#9AA6B2"/>
+    <path d="M8 -48 H26 V-38 H7.5 Z" fill="#2C3E50"/><rect x="29" y="-48" width="20" height="10" rx="1" fill="#2C3E50"/><path d="M52 -48 Q55 -48 57 -46 L65 -38 H52 Z" fill="#2C3E50"/>
+    <path d="M3 -21 H40 Q46 -21 52 -16 L56 -12 H3 Z" fill="#0C427E"/><g transform="translate(10,-35) scale(.1)">${FF_LOGO}</g>
+    <text x="9" y="-23.5" font-size="3.6" font-weight="700" fill="#0C427E" font-family="Arial">FF EQUIPAMENTOS</text>
+    <rect class="porta" x="29" y="-38" width="21" height="26" fill="#2A3038"/>
+    <rect x="80" y="-29" width="4" height="3" rx="1" fill="#F2C200"/><rect x="3" y="-30" width="2.5" height="4" rx="1" fill="#D64545"/>${roda(18, 8.2)}${roda(68, 8.2)}`;
+  return `
+    <path d="M38 -32 V-40 H45" fill="none" stroke="#2A3038" stroke-width="2" stroke-linecap="round"/>
+    <path d="M2 -12 V-32 H45 L49 -50 Q50 -53 54 -53 H71 Q76 -53 79 -49 L87 -38 Q101 -36 104 -29 V-14 Q104 -9 99 -9 H6 Q2 -9 2 -12 Z" fill="#FAFBFC" stroke="#9AA6B2"/>
+    <path d="M51 -49 H70 V-39 H49 Z" fill="#2C3E50"/><path d="M73 -49 Q76 -49 78 -47 L85 -39 H73 Z" fill="#2C3E50"/>
+    <rect x="9" y="-31" width="3" height="18" fill="#E75723"/><rect x="13" y="-31" width="2" height="18" fill="#0C427E"/><rect x="16" y="-31" width="3" height="18" fill="#E75723"/><rect x="20" y="-31" width="3" height="18" fill="#0C427E"/>
+    <g transform="translate(27,-30) scale(.12)">${FF_LOGO}</g><rect x="2" y="-15" width="102" height="2.4" fill="#0C427E"/>
+    <rect class="porta" x="50" y="-39" width="21" height="27" fill="#2A3038"/>
+    <rect x="100" y="-29" width="4" height="3" rx="1" fill="#F2C200"/><rect x="2" y="-30" width="2.5" height="5" rx="1" fill="#D64545"/>${roda(18, 8.5)}${roda(86, 8.5)}`;
+}
+function cenaSVG(ori, uno) {
+  const naRua = ori === "rua";
+  const tec = naRua ? "" : `<g class="tec">
+    <rect class="pA" x="-4.5" y="118" width="4.5" height="20" rx="1.5" fill="#2B3644"/><rect class="pB" x="0" y="118" width="4.5" height="20" rx="1.5" fill="#2B3644"/>
+    <rect class="bB" x="-6.5" y="99" width="3.2" height="18" rx="1.6" fill="#C68E6B"/>
+    <rect x="-5.5" y="137" width="7" height="3" rx="1" fill="#111"/><rect x="0" y="137" width="7" height="3" rx="1" fill="#111"/>
+    <path d="M-8 101 Q-8 96 -3 95.5 H3 Q8 96 8 101 V121 H-8 Z" fill="#16191D"/><path d="M-3 95.5 L0 100 L3 95.5" fill="none" stroke="#3A4048" stroke-width="1.1"/>
+    <g transform="translate(-1.5,102.5) scale(.06)">${FF_LOGO}</g>
+    <rect x="-2" y="91" width="4" height="5" fill="#C68E6B"/><circle cx="0" cy="86" r="6" fill="#C68E6B"/><path d="M-6 85 Q-6 79 0 79 Q6 79 6 84 Q3 82 -1 82.5 Q-4 83 -6 86 Z" fill="#2A1E17"/>
+    <rect x="5" y="103" width="3.2" height="15" rx="1.6" fill="#C68E6B"/>
+    ${ori === "base" ? `<g class="cxMao">${caixa(2, 121)}</g>` : ""}</g>`;
+  const cxBanc = ori === "base" ? caixa(91, 106) : "";
+  const cancela = ori === "base" ? `<rect x="315" y="104" width="6" height="36" rx="1" fill="#5E6B78"/>
+    <g class="barra"><rect x="272" y="106" width="44" height="4" rx="2" fill="#F2C200"/><rect x="280" y="106" width="6" height="4" fill="#15202B"/><rect x="294" y="106" width="6" height="4" fill="#15202B"/></g>` : "";
+  return `<svg class="cena ${naRua ? "narua" : ""}" viewBox="0 0 340 170" role="img" aria-label="Técnico saindo para o atendimento">
+    <rect x="0" y="0" width="340" height="140" fill="#EAF1F7"/><rect x="0" y="140" width="340" height="30" fill="#E4E8EC"/>
+    <line x1="${naRua ? 0 : 150}" y1="156" x2="340" y2="156" stroke="#fff" stroke-width="2" stroke-dasharray="10 8"/>
+    ${predio(ori)}<g class="cxBanc">${cxBanc}</g>${cancela}
+    <g class="carro"><g transform="translate(${uno ? 180 : 172},140)">${veiculoSVG(uno)}</g>
+      <g class="fumaca"><circle cx="${uno ? 176 : 168}" cy="128" r="3" fill="#C9D0D6"/><circle cx="${uno ? 170 : 162}" cy="125" r="4" fill="#DCE2E8"/></g></g>
+    ${tec}</svg>`;
+}
+// sons suaves (só se o cliente ativar): sino, ferramentas, porta, ignição
+let AUD = null, SOM = false;
+function tom(f, ini, dur, tipo = "sine", vol = .25) {
+  if (!AUD) return; const t = AUD.currentTime + ini, o = AUD.createOscillator(), g = AUD.createGain();
+  o.type = tipo; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(AUD.destination); o.start(t); o.stop(t + dur + .05);
+}
+function ruido(ini, dur, freq, vol = .2) {
+  if (!AUD) return; const t = AUD.currentTime + ini, n = AUD.sampleRate * dur, b = AUD.createBuffer(1, n, AUD.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const s = AUD.createBufferSource(), f = AUD.createBiquadFilter(), g = AUD.createGain(); s.buffer = b; f.type = "lowpass"; f.frequency.value = freq; g.gain.value = vol;
+  s.connect(f).connect(g).connect(AUD.destination); s.start(t);
+}
+function sonsCena(ori, dur) {
+  if (!SOM || !AUD) return;
+  tom(880, 0, 1.2); tom(1320, .15, 1.1, "sine", .18);                                 // sino: técnico a caminho
+  if (ori === "base") [0, .12, .22].forEach((x, i) => tom(2400 + i * 300, dur * .13 + x, .12, "triangle", .12));   // ferramentas
+  if (ori !== "rua") ruido(dur * .47, .18, 300, .35);                                                  // porta fechando
+  ruido(dur * (ori === "rua" ? .14 : .5), .9, 180, .25);                                // ignição
+}
+function tocarCena(box, ori, veiculo, nomeT, cliente) {
+  const uno = /uno/i.test(veiculo || "");
+  box.innerHTML = cenaSVG(ori, uno);
+  const cap = (CAP_ORI[ori] || CAP_ORI.rua).replace("%T", nomeT).replace("%C", cliente || "sua empresa");
+  $("animCap").textContent = cap;
+  sonsCena(ori, 9);
+}
+
+let CENA_VISTA = null;   // toca uma vez por SS quando entra em "A caminho" (o cliente pode rever)
+function animacao(a, st, nomeT) {
+  const on = st === "a_caminho"; $("cAnim").hidden = !on; if (!on) { CENA_VISTA = null; return; }
+  const chave = a.ss + "|" + (a.origem_saida || "rua");
+  if (CENA_VISTA === chave) return; CENA_VISTA = chave;
+  tocarCena($("animBox"), a.origem_saida || "rua", a.tecnico && a.tecnico.veiculo, nomeT, a.cliente);
+}
+$("bRever").onclick = () => { const a = DADOS[atual]; if (!a) return; const t = a.tecnico && a.tecnico.nome ? a.tecnico.nome.split(" ")[0] : "O técnico"; tocarCena($("animBox"), a.origem_saida || "rua", a.tecnico && a.tecnico.veiculo, t, a.cliente); };
+$("bSom").onclick = () => {
+  SOM = !SOM; const b = $("bSom"); b.setAttribute("aria-pressed", SOM); b.textContent = SOM ? "🔔 Som ligado" : "🔇 Ativar som";
+  if (SOM && !AUD) { try { AUD = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AUD = null; } }
+  if (SOM && AUD) { (AUD.resume ? AUD.resume() : Promise.resolve()).then(() => { tom(880, 0, .8); setTimeout(() => $("bRever").click(), 900); }); }
+};
+function erro(t) { $("carregando").hidden = true; $("tela").hidden = true; $("erro").hidden = false; $("erro").textContent = t; }
+
+// vários equipamentos no mesmo atendimento: ?c=codigo1,codigo2 (uma SS por código)
+const p = new URLSearchParams(location.search);
+if (p.get("adm") === "1") { const v = $("voltaAdm"); v.hidden = false; v.onclick = e => { if (window.opener) { e.preventDefault(); window.close(); } }; }   // rev. 2: só para o ADM
+const CODS = (p.get("c") || location.hash.replace("#", "") || "").split(",").map(x => x.trim()).filter(x => /^[A-Za-z0-9]{20,}$/.test(x));
+const DADOS = {}; let atual = 0;
+if (!CODS.length) erro("Link de acompanhamento inválido. Confira o link recebido ou fale com a FF Logística.");
+else CODS.forEach((c, i) => onSnapshot(doc(db, "acompanhar", c), snap => {
+  DADOS[i] = snap.exists() ? snap.data() : null;
+  if (CODS.every((_, k) => k in DADOS) && CODS.every((_, k) => DADOS[k] === null)) { erro("Não encontramos esta solicitação. Confira o link recebido ou fale com a FF Logística."); return; }
+  if (DADOS[atual] === null) atual = CODS.findIndex((_, k) => DADOS[k]);
+  if (DADOS[atual]) { abas(); render(DADOS[atual]); }
+}, () => erro("Não foi possível carregar agora. Verifique a internet e tente de novo.")));
+function abas(){
+  $("cAbas").hidden = CODS.length < 2;
+  $("abas").innerHTML = CODS.map((_, i) => { const a = DADOS[i]; if (!a) return "";
+    const nome = a.status === "aguardando_financeiro" ? "Em análise" : "SS " + fmt(a.ss);
+    return `<button class="aba ${i === atual ? "on" : ""}" data-i="${i}">${esc(nome)} · ${esc([a.equipamento, a.tag].filter(Boolean).join(" "))}</button>`; }).join("");
+}
+document.addEventListener("click", e => { const b = e.target.closest(".aba"); if (!b) return; atual = +b.dataset.i; abas(); render(DADOS[atual]); window.scrollTo({ top: 0 }); });
+
+function render(a) {
+  $("carregando").hidden = true; $("erro").hidden = true; $("tela").hidden = false;
+  const st = TXT[a.status] ? a.status : "recebida";
+  const restrito = st === "aguardando_financeiro";              // cliente restrito: sem nº de SS até a liberação
+  const t = a.tecnico && a.tecnico.nome ? a.tecnico : null;
+  const nomeT = t ? t.nome.split(" ")[0] : "O técnico";
+
+  $("ssn").textContent = restrito ? "Solicitação em análise" : `SS (Solicitação de Serviço) nº ${fmt(a.ss)}`;
+  $("eq").textContent = [a.equipamento, a.tag].filter(Boolean).join(" · ") || "Equipamento";
+  const [ic, titulo, txt] = TXT[st];
+  $("ic").textContent = ic;
+  $("ic").style.background = st === "concluida" ? "var(--ok)" : st === "cancelada" ? "var(--crit)" : "var(--ff)";
+  $("stT").textContent = titulo;
+  $("stP").textContent = txt.replace("%T", nomeT);
+
+  const mostraTec = t && ["designada", "a_caminho", "chegou", "em_atendimento"].includes(st);
+  $("cTec").hidden = !mostraTec;
+  if (mostraTec) {
+    $("tAv").textContent = (t.nome || "?")[0];
+    $("tNm").textContent = t.nome;
+    $("tVh").innerHTML = [t.veiculo ? esc(t.veiculo) : "", t.placa ? `placa <b>${esc(t.placa)}</b>` : ""].filter(Boolean).join(" · ");
+    // rev. 2: o cliente fala com a central da FF (ADM), não direto com o técnico
+    const txtFF = encodeURIComponent(`Olá! Gostaria de falar sobre ${restrito ? "minha solicitação" : "a SS nº " + fmt(a.ss)}.`);
+    $("tBts").innerHTML = `<a class="bt" href="tel:+${FONE_FF}">📞 Ligar para a FF</a><a class="bt wa" href="https://wa.me/${FONE_FF}?text=${txtFF}" target="_blank" rel="noopener">WhatsApp da FF</a>`;
+  }
+  animacao(a, st, nomeT);
+  $("cMapa").hidden = st !== "a_caminho";
+  if (st === "a_caminho") mapa(a, nomeT);
+
+  const e = a.etapas || {}, ordem = ETAPAS.map(x => x[0]);
+  const idx = st === "cancelada" ? -1 : Math.max(0, ordem.indexOf(st === "aguardando_financeiro" ? "recebida" : st));
+  let lista = ETAPAS.map(([k, nome], i) => {
+    const cls = st === "cancelada" ? (e[k] ? "ok" : "fut") : i < idx ? "ok" : i === idx ? (st === "concluida" ? "ok" : "atual") : "fut";
+    return `<li class="${cls}"><span class="d"></span><span class="t">${esc(nome)}</span><span class="h">${esc(hora(e[k]))}</span></li>`;
+  });
+  if (st === "cancelada") lista = lista.filter(x => !x.includes('class="fut"')).concat(`<li class="atual"><span class="d"></span><span class="t">Solicitação cancelada</span><span class="h">${esc(hora(e.cancelada))}</span></li>`);
+  $("tl").innerHTML = lista.join("");
+
+  const ref = restrito ? "minha solicitação" : `a SS nº ${fmt(a.ss)}`;
+  $("ffWa").href = `https://wa.me/${FONE_FF}?text=${encodeURIComponent(`Olá! Gostaria de falar sobre ${ref}.`)}`;
+  $("atu").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + " · esta página atualiza sozinha";
+}
+</script>
+</body>
+</html>

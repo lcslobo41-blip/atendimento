@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B2A3A">
+<title>Almoço – FF Logística</title>
+<style>
+:root{--bg:#EEF1F5;--ink:#14202C;--muted:#5B6B7B;--line:#D6DDE5;--ff:#0C427E;--navy:#1B2A3A;--safety:#F2B705;--ok:#2E7D4F;--crit:#C53030}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+.teste{background:var(--safety);text-align:center;font-weight:700;font-size:12px;padding:2px}
+header{background:var(--navy);color:#fff;padding:14px 16px;font-weight:800;font-size:19px}header b{color:var(--safety)}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px;gap:16px;text-align:center}
+.ola{font-size:20px;font-weight:700}.relogio{font:700 44px/1 ui-monospace,Consolas,monospace;letter-spacing:1px}
+.bt{width:min(320px,100%);aspect-ratio:1;border-radius:50%;border:0;font:800 26px/1.2 system-ui,sans-serif;color:#fff;background:var(--ok);
+  box-shadow:0 10px 30px rgba(46,125,79,.35);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.bt small{font-size:15px;font-weight:600;opacity:.9}
+.bt:disabled{background:#9AA6B2;box-shadow:none;cursor:default}
+.bt.almoco{background:#6B7785;box-shadow:none}
+.msg{max-width:360px;color:var(--muted);font-size:15px}.erro{color:var(--crit);font-weight:700}
+.conf{position:fixed;inset:0;background:rgba(20,32,44,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.conf.on{display:flex}.cbox{background:#fff;border-radius:16px;padding:20px;max-width:360px;display:grid;gap:12px}
+.cbox button{font:700 17px system-ui,sans-serif;border:0;border-radius:10px;padding:14px;cursor:pointer}
+.sim{background:var(--ok);color:#fff}.nao{background:#E6EAF0;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="teste">TESTE – almoco_TESTE</div>
+<header>FF <b>LOGÍSTICA</b> · Almoço</header>
+<main>
+  <div class="ola" id="ola">Olá!</div>
+  <div class="relogio" id="rel">--:--</div>
+  <button class="bt" id="bt" disabled>…</button>
+  <div class="msg" id="msg">Carregando…</div>
+</main>
+<div class="conf" id="cien" role="dialog" aria-modal="true"><div class="cbox">
+  <b style="font-size:19px">🍽 Seu intervalo de almoço começou</b>
+  <span id="cienTx"></span>
+  <span style="font-size:14px;color:#5B6B7B">Para continuar usando o app você precisa confirmar que está ciente.</span>
+  <button class="sim" id="cienOk">Estou ciente</button>
+</div></div>
+<div class="conf" id="conf" role="dialog" aria-modal="true"><div class="cbox">
+  <b style="font-size:18px">Iniciar o almoço agora?</b>
+  <span>São <b>60 minutos fixos</b>. Não dá para voltar antes nem dividir. No minuto 61 você volta sozinho a disponível.</span>
+  <button class="sim" id="sim">Sim, iniciar almoço</button><button class="nao" id="nao">Cancelar</button>
+</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app = initializeApp({ apiKey: "AIzaSyDYul8Os92mtNRjnV-Zxe_GA8Z8ymrWfJ0", authDomain: "ff-atendimento.firebaseapp.com", projectId: "ff-atendimento",
+  storageBucket: "ff-atendimento.firebasestorage.app", messagingSenderId: "466557786402", appId: "1:466557786402:web:98ad4085442de6d3cd6d7b" });
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const P = new URLSearchParams(location.search), TID = P.get("t") || "", K = P.get("k") || "", NOME = P.get("n") || "";
+const MIN = 60, LIBERA_H = 12;
+const hojeISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const hm = d => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+let REG = null, dia = hojeISO(), unsub = null;
+if (NOME) $("ola").textContent = `Olá, ${NOME}!`;
+if (!TID || !K) { $("msg").innerHTML = '<span class="erro">Link incompleto. Peça ao ADM o seu link do almoço.</span>'; $("bt").textContent = "—"; }
+else ouvir();
+
+function ouvir() {
+  if (unsub) unsub();
+  unsub = onSnapshot(doc(db, "almocos", `${TID}_${dia}`), s => { REG = s.exists() ? s.data() : null; tela(); },
+    () => { REG = null; tela(); });
+}
+function tela() {
+  const n = new Date(); $("rel").textContent = hm(n);
+  if (hojeISO() !== dia) { dia = hojeISO(); ouvir(); return; }
+  const bt = $("bt"); bt.classList.remove("almoco");
+  if (REG && REG.inicio) {
+    const ini = REG.inicio.toDate ? REG.inicio.toDate() : new Date(REG.inicio), fim = new Date(ini.getTime() + MIN * 60000);
+    // automático: bloqueia a tela até o técnico dar "Estou ciente" (registro legal do intervalo)
+    const precisaCiente = REG.tipo === "automatico" && !REG.ciente_em;
+    $("cien").classList.toggle("on", precisaCiente);
+    if (precisaCiente) $("cienTx").innerHTML = `Você não iniciou o almoço até as 14:30, então o <b>intervalo automático</b> foi registrado de <b>${hm(ini)} às ${hm(fim)}</b>. Durante esse período você não recebe atendimentos.`;
+    if (n < fim) {
+      const f = Math.max(1, Math.ceil((fim - n) / 60000));
+      bt.disabled = true; bt.classList.add("almoco"); bt.innerHTML = `🍽 Em almoço<small>volta às ${hm(fim)} · faltam ${f} min</small>`;
+      $("msg").textContent = REG.tipo === "automatico" ? "Almoço automático: você não iniciou até as 14:30." : "Bom almoço! No minuto 61 você volta sozinho a disponível.";
+    } else {
+      bt.disabled = true; bt.innerHTML = `✔ Almoço feito<small>${hm(ini)} – ${hm(fim)}</small>`;
+      $("msg").textContent = "Você já está disponível para o próximo atendimento.";
+    }
+    return;
+  }
+  if (n.getHours() < LIBERA_H) { bt.disabled = true; bt.innerHTML = "Almoço<small>libera às 12:00</small>"; $("msg").textContent = "O botão fica ativo a partir das 12:00."; return; }
+  bt.disabled = false; bt.innerHTML = "🍽 Iniciar almoço<small>60 minutos</small>";
+  $("msg").textContent = "Aperte quando for almoçar. Se não apertar até as 14:30, o almoço automático começa às 14:30.";
+}
+$("bt").onclick = () => { if (!$("bt").disabled) $("conf").classList.add("on"); };
+$("nao").onclick = () => $("conf").classList.remove("on");
+$("sim").onclick = async () => {
+  $("conf").classList.remove("on"); $("bt").disabled = true; $("msg").textContent = "Registrando…";
+  try {
+    await setDoc(doc(db, "almocos", `${TID}_${dia}`), { tecnico_id: TID, tecnico_nome: NOME, data: dia, inicio: serverTimestamp(), tipo: "manual", chave: K, origem: "botao_celular" });
+  } catch (e) { $("msg").innerHTML = `<span class="erro">Não registrou (${e.code || e.message}). Tente de novo ou avise o ADM.</span>`; tela(); }
+};
+$("cienOk").onclick = async () => {
+  $("cienOk").disabled = true;
+  try { await updateDoc(doc(db, "almocos", `${TID}_${dia}`), { ciente_em: serverTimestamp(), ciente_chave: K }); }
+  catch (e) { alert("Não registrou o ciente (" + (e.code || e.message) + "). Tente de novo."); }
+  $("cienOk").disabled = false;
+};
+setInterval(tela, 15000); tela();
+</script>
+</body>
+</html>
